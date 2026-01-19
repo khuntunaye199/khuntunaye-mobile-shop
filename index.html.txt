@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA Primary Tags -->
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MobileShop">
+    
+    <title>Mobile Shop Pro - Glass UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Inter:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --text-main: #1f2937;
+        }
+
+        .dark {
+            --glass-bg: rgba(31, 41, 55, 0.7);
+            --glass-border: rgba(75, 85, 99, 0.3);
+            --text-main: #f9fafb;
+        }
+
+        body { 
+            font-family: 'Inter', 'Padauk', sans-serif; 
+            transition: background-color 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        .mm-font { font-family: 'Padauk', sans-serif; }
+        
+        .tab-active {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .sync-active { animation: spin 2s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .mode-switch {
+            width: 50px;
+            height: 24px;
+            background: #e5e7eb;
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .dark .mode-switch { background: #4b5563; }
+        .mode-knob {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: 0.3s;
+        }
+        .dark .mode-knob { transform: translateX(26px); }
+
+        /* Hide Scrollbar */
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 pb-24 text-slate-900 dark:text-slate-100">
+
+    <!-- Header -->
+    <header class="glass-card sticky top-0 z-50 p-4 mb-4 border-b">
+        <div class="flex justify-between items-center max-w-4xl mx-auto">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 p-2 rounded-xl text-white shadow-lg">
+                    <i class="fas fa-mobile-screen-button text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight">Mobile Shop Pro</h1>
+                    <p class="text-[10px] opacity-70 mm-font" data-key="header-subtitle">အရောင်းဆိုင် စီမံခန့်ခွဲမှုစနစ်</p>
+                </div>
+            </div>
+            <button onclick="toggleModal('settingsModal')" class="h-10 w-10 rounded-xl glass-card flex items-center justify-center hover:scale-105 transition-transform">
+                <i class="fas fa-sliders text-indigo-600 dark:text-indigo-400"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4 space-y-6">
+
+        <!-- Sync Indicator -->
+        <div id="syncIndicator" class="hidden glass-card border-yellow-200/50 bg-yellow-50/50 dark:bg-yellow-900/20 p-3 rounded-2xl text-xs flex items-center gap-3 text-yellow-700 dark:text-yellow-400">
+            <i class="fas fa-circle-notch sync-active text-lg"></i>
+            <span class="mm-font" data-key="sync-text">Cloud သို့ ပို့နေသည်...</span>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <section class="grid grid-cols-2 gap-4">
+            <div class="glass-card p-5 rounded-3xl border-l-4 border-blue-500 overflow-hidden relative">
+                <div class="absolute -right-4 -top-4 text-blue-500/10 text-6xl"><i class="fas fa-box"></i></div>
+                <p class="text-gray-500 dark:text-gray-400 text-[10px] uppercase font-bold tracking-widest" data-key="stat-stock-label">Total Stock</p>
+                <h2 id="totalStockCount" class="text-3xl font-black mt-1">0</h2>
+                <p class="text-[10px] opacity-60 mm-font mt-1" data-key="stat-stock-mm">လက်ကျန် စုစုပေါင်း</p>
+            </div>
+            <div class="glass-card p-5 rounded-3xl border-l-4 border-emerald-500 overflow-hidden relative">
+                <div class="absolute -right-4 -top-4 text-emerald-500/10 text-6xl"><i class="fas fa-money-bill-trend-up"></i></div>
+                <p class="text-gray-500 dark:text-gray-400 text-[10px] uppercase font-bold tracking-widest" data-key="stat-income-label">Today Income</p>
+                <h2 id="todayIncome" class="text-xl font-black mt-2 truncate">0</h2>
+                <p class="text-[10px] opacity-60 mm-font mt-1" data-key="stat-income-mm">ယနေ့ အရောင်းရငွေ</p>
+            </div>
+        </section>
+
+        <!-- Navigation -->
+        <div class="flex glass-card rounded-2xl p-1.5 shadow-sm">
+            <button onclick="switchTab('inventory')" id="tab-inventory" class="flex-1 py-3 rounded-xl text-xs font-bold transition-all tab-active">
+                <i class="fas fa-layer-group mr-1.5"></i> <span data-key="tab-inventory">INVENTORY</span>
+            </button>
+            <button onclick="switchTab('sales')" id="tab-sales" class="flex-1 py-3 rounded-xl text-xs font-bold transition-all text-slate-500">
+                <i class="fas fa-chart-line mr-1.5"></i> <span data-key="tab-sales">SALES LOG</span>
+            </button>
+        </div>
+
+        <!-- Views -->
+        <div id="view-inventory" class="space-y-4">
+            <div class="flex justify-between items-center px-1">
+                <h3 class="font-bold mm-font text-lg" data-key="list-title">Stock စာရင်း</h3>
+                <span id="itemCountLabel" class="text-[10px] font-bold bg-slate-200 dark:bg-slate-700 px-3 py-1 rounded-full uppercase">0 Items</span>
+            </div>
+
+            <div class="relative group">
+                <input type="text" id="inventorySearch" data-placeholder-key="search-placeholder" placeholder="Search Model or IMEI..." class="w-full pl-11 pr-4 py-4 rounded-2xl glass-card border-none ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors"></i>
+            </div>
+
+            <div id="inventoryContainer" class="space-y-3 pb-4"></div>
+        </div>
+
+        <div id="view-sales" class="hidden space-y-4">
+            <h3 class="font-bold mm-font text-lg px-1" data-key="sales-title">အရောင်းမှတ်တမ်း</h3>
+            <div id="salesContainer" class="space-y-3 pb-4"></div>
+        </div>
+
+    </main>
+
+    <!-- Modals (Settings, Add, Sell) - Same as previous version but with optimized mobile layout -->
+    <!-- [Settings Modal Code] -->
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[70] hidden flex items-center justify-center p-6">
+        <div class="glass-card rounded-[2.5rem] w-full max-w-md p-8 space-y-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b dark:border-slate-700 pb-4">
+                <h3 class="font-black text-xl flex items-center gap-2"><i class="fas fa-gear text-indigo-500"></i> <span data-key="settings-title">App Settings</span></h3>
+                <button onclick="toggleModal('settingsModal')" class="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="space-y-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-bold text-sm" data-key="lang-label">Language</p>
+                        <p class="text-[10px] opacity-50">ဘာသာစကား ရွေးချယ်ရန်</p>
+                    </div>
+                    <select id="langSelect" onchange="changeLanguage()" class="bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-2 text-xs font-bold outline-none ring-1 ring-slate-200 dark:ring-slate-700">
+                        <option value="en">English</option>
+                        <option value="mm">မြန်မာစာ</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-bold text-sm" data-key="theme-label">Dark Mode</p>
+                        <p class="text-[10px] opacity-50">မှောင်သော ပုံစံပြောင်းရန်</p>
+                    </div>
+                    <div class="mode-switch" onclick="toggleDarkMode()">
+                        <div class="mode-knob"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest" data-key="cloud-label">Google Script URL</label>
+                    <input type="text" id="scriptUrl" placeholder="https://script.google.com/..." class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none ring-1 ring-slate-200 dark:ring-slate-700 text-xs font-mono">
+                </div>
+                <button onclick="saveSettings()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-black shadow-lg shadow-indigo-500/30 transition-all uppercase tracking-tighter" data-key="save-btn">Save All Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- [Add Item Modal Code] -->
+    <div id="addDeviceModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[70] hidden flex items-center justify-center p-6">
+        <div class="glass-card rounded-[2.5rem] w-full max-w-md p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b dark:border-slate-700 pb-4">
+                <h3 class="font-black text-xl mm-font" data-key="add-title">ပစ္စည်းအသစ်သွင်းရန်</h3>
+                <button onclick="toggleModal('addDeviceModal')" class="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="addDeviceForm" class="space-y-4">
+                <input type="text" id="model" required data-placeholder-key="model-placeholder" placeholder="Model Name" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none ring-1 ring-slate-200 dark:ring-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="text" id="imei" required data-placeholder-key="imei-placeholder" placeholder="IMEI / SN" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none ring-1 ring-slate-200 dark:ring-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" id="purchasePrice" required data-placeholder-key="buy-placeholder" placeholder="Buy Price" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none ring-1 ring-slate-200 dark:ring-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="number" id="salePrice" required data-placeholder-key="sell-placeholder" placeholder="Sell Price" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none ring-1 ring-slate-200 dark:ring-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <select id="category" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none ring-1 ring-slate-200 dark:ring-slate-700 outline-none">
+                    <option value="Smartphone">Smartphone</option>
+                    <option value="Tablet">Tablet</option>
+                    <option value="Used">Used Device</option>
+                    <option value="Accessory">Accessory</option>
+                </select>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-indigo-500/30 uppercase tracking-widest mt-4" data-key="add-submit">Add Stock</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- [Sell Modal Code] -->
+    <div id="sellDeviceModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[70] hidden flex items-center justify-center p-6">
+        <div class="glass-card rounded-[2.5rem] w-full max-w-md p-8 space-y-6 shadow-2xl">
+            <h3 class="font-black text-xl mm-font text-center" data-key="confirm-title">အရောင်းအတည်ပြုခြင်း</h3>
+            <div id="sellPreview" class="bg-indigo-500/10 p-5 rounded-3xl border border-indigo-200/20 text-sm"></div>
+            <div class="space-y-4">
+                <div class="text-center">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2" data-key="final-price-label">Final Selling Price (Ks)</label>
+                    <input type="number" id="finalSoldPrice" class="w-full p-5 bg-white dark:bg-slate-800 rounded-3xl border-none ring-1 ring-indigo-200 dark:ring-indigo-900 text-3xl font-black text-indigo-600 text-center shadow-inner">
+                </div>
+                <button id="confirmSaleBtn" class="w-full bg-emerald-600 text-white py-5 rounded-3xl font-black shadow-lg shadow-emerald-500/30 uppercase tracking-widest" data-key="confirm-sale-btn">Confirm Sale</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="fixed bottom-0 left-0 right-0 glass-card border-t dark:border-slate-800 px-6 py-4 flex justify-around items-center z-50 rounded-t-[2.5rem]">
+        <button onclick="switchTab('inventory')" class="flex flex-col items-center text-indigo-600 dark:text-indigo-400 active:scale-90 transition-transform">
+            <i class="fas fa-boxes-stacked text-xl"></i>
+            <span class="text-[9px] mt-1 font-black tracking-tighter" data-key="nav-stock">STOCK</span>
+        </button>
+        <button onclick="toggleModal('addDeviceModal')" class="bg-indigo-600 text-white h-16 w-16 rounded-3xl -mt-12 flex items-center justify-center shadow-2xl shadow-indigo-500/50 active:scale-90 transition-all border-4 border-white dark:border-slate-900">
+            <i class="fas fa-plus text-2xl"></i>
+        </button>
+        <button onclick="switchTab('sales')" class="flex flex-col items-center text-slate-400 active:scale-90 transition-transform">
+            <i class="fas fa-receipt text-xl"></i>
+            <span class="text-[9px] mt-1 font-black tracking-tighter" data-key="nav-sales">SALES</span>
+        </button>
+    </nav>
+
+    <script>
+        // --- Same Script Logic as previous version with minor fixes for mobile ---
+        const i18n = {
+            en: {
+                "header-subtitle": "Shop Management System",
+                "stat-stock-label": "Total Stock",
+                "stat-stock-mm": "Available items",
+                "stat-income-label": "Today Income",
+                "stat-income-mm": "Revenue recorded",
+                "tab-inventory": "INVENTORY",
+                "tab-sales": "SALES LOG",
+                "list-title": "Stock List",
+                "search-placeholder": "Search Model or IMEI...",
+                "sales-title": "Sales History",
+                "settings-title": "App Settings",
+                "lang-label": "App Language",
+                "theme-label": "Dark Mode",
+                "cloud-label": "Google Script URL",
+                "save-btn": "Save All Changes",
+                "add-title": "Add New Stock",
+                "model-placeholder": "Model (e.g. iPhone 15)",
+                "imei-placeholder": "IMEI / Serial Number",
+                "buy-placeholder": "Purchase Price",
+                "sell-placeholder": "Listing Price",
+                "add-submit": "Add Stock",
+                "confirm-title": "Confirm Sale",
+                "final-price-label": "Final Sold Price (Ks)",
+                "confirm-sale-btn": "Confirm & Record",
+                "sync-text": "Syncing to Cloud...",
+                "nav-stock": "STOCK",
+                "nav-sales": "SALES",
+                "profit-label": "Profit",
+                "toast-saved": "Settings Saved!",
+                "toast-added": "Added & Synced!",
+                "toast-sold": "Sold Successfully!"
+            },
+            mm: {
+                "header-subtitle": "အရောင်းဆိုင် စီမံခန့်ခွဲမှုစနစ်",
+                "stat-stock-label": "စုစုပေါင်း ပစ္စည်း",
+                "stat-stock-mm": "လက်ကျန် အရေအတွက်",
+                "stat-income-label": "ယနေ့ အရောင်းရငွေ",
+                "stat-income-mm": "စုစုပေါင်း ရရှိငွေ",
+                "tab-inventory": "ပစ္စည်းစာရင်း",
+                "tab-sales": "အရောင်းမှတ်တမ်း",
+                "list-title": "ပစ္စည်းစာရင်း",
+                "search-placeholder": "မော်ဒယ် သို့မဟုတ် IMEI ဖြင့်ရှာရန်...",
+                "sales-title": "အရောင်းမှတ်တမ်းများ",
+                "settings-title": "ဆဲတင်များ",
+                "lang-label": "ဘာသာစကား",
+                "theme-label": "မှောင်သောပုံစံ (Dark)",
+                "cloud-label": "Google Script URL",
+                "save-btn": "အချက်အလက် သိမ်းမည်",
+                "add-title": "ပစ္စည်းအသစ်သွင်းရန်",
+                "model-placeholder": "မော်ဒယ်အမည်",
+                "imei-placeholder": "IMEI နံပါတ်",
+                "buy-placeholder": "ဝယ်စျေး",
+                "sell-placeholder": "ရောင်းစျေး",
+                "add-submit": "စာရင်းထဲထည့်မည်",
+                "confirm-title": "အရောင်းအတည်ပြုခြင်း",
+                "final-price-label": "အမှန်တကယ်ရောင်းစျေး (Ks)",
+                "confirm-sale-btn": "ရောင်းမည်",
+                "sync-text": "Cloud သို့ ပို့နေသည်...",
+                "nav-stock": "စာရင်း",
+                "nav-sales": "အရောင်း",
+                "profit-label": "အမြတ်",
+                "toast-saved": "သိမ်းဆည်းပြီးပါပြီ",
+                "toast-added": "စာရင်းသွင်းပြီးပါပြီ",
+                "toast-sold": "အရောင်းအောင်မြင်ပါသည်"
+            }
+        };
+
+        let inventory = JSON.parse(localStorage.getItem('mm_mobile_glass_inv')) || [];
+        let sales = JSON.parse(localStorage.getItem('mm_mobile_glass_sales')) || [];
+        let settings = JSON.parse(localStorage.getItem('mm_mobile_glass_settings')) || { 
+            scriptUrl: '', 
+            lang: 'mm',
+            darkMode: false
+        };
+        let currentSaleId = null;
+
+        function initApp() {
+            document.body.classList.toggle('dark', settings.darkMode);
+            document.getElementById('langSelect').value = settings.lang;
+            document.getElementById('scriptUrl').value = settings.scriptUrl;
+            updateTranslations();
+            renderInventory();
+            renderSales();
+            updateStats();
+        }
+
+        function updateTranslations() {
+            const dict = i18n[settings.lang];
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if(dict[key]) el.innerText = dict[key];
+            });
+            document.querySelectorAll('[data-placeholder-key]').forEach(el => {
+                const key = el.getAttribute('data-placeholder-key');
+                if(dict[key]) el.placeholder = dict[key];
+            });
+        }
+
+        function toggleDarkMode() {
+            settings.darkMode = !settings.darkMode;
+            document.body.classList.toggle('dark', settings.darkMode);
+            localStorage.setItem('mm_mobile_glass_settings', JSON.stringify(settings));
+        }
+
+        function changeLanguage() {
+            settings.lang = document.getElementById('langSelect').value;
+            localStorage.setItem('mm_mobile_glass_settings', JSON.stringify(settings));
+            updateTranslations();
+        }
+
+        function saveSettings() {
+            settings.scriptUrl = document.getElementById('scriptUrl').value;
+            localStorage.setItem('mm_mobile_glass_settings', JSON.stringify(settings));
+            toggleModal('settingsModal');
+            showToast(i18n[settings.lang]['toast-saved']);
+        }
+
+        function toggleModal(id) {
+            document.getElementById(id).classList.toggle('hidden');
+        }
+
+        function switchTab(tab) {
+            const isInv = tab === 'inventory';
+            document.getElementById('view-inventory').classList.toggle('hidden', !isInv);
+            document.getElementById('view-sales').classList.toggle('hidden', isInv);
+            document.getElementById('tab-inventory').className = `flex-1 py-3 rounded-xl text-xs font-bold transition-all ${isInv ? 'tab-active' : 'text-slate-500'}`;
+            document.getElementById('tab-sales').className = `flex-1 py-3 rounded-xl text-xs font-bold transition-all ${!isInv ? 'tab-active' : 'text-slate-500'}`;
+        }
+
+        function formatMMK(num) {
+            return new Intl.NumberFormat('en-MM').format(num) + ' Ks';
+        }
+
+        async function syncToGoogleSheets(action, data) {
+            if (!settings.scriptUrl) return;
+            document.getElementById('syncIndicator').classList.remove('hidden');
+            try {
+                await fetch(settings.scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, ...data, timestamp: new Date().toLocaleString() })
+                });
+            } catch (err) { console.error(err); }
+            finally { setTimeout(() => document.getElementById('syncIndicator').classList.add('hidden'), 1000); }
+        }
+
+        document.getElementById('addDeviceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const item = {
+                id: Date.now(),
+                model: document.getElementById('model').value,
+                imei: document.getElementById('imei').value,
+                purchasePrice: parseFloat(document.getElementById('purchasePrice').value),
+                salePrice: parseFloat(document.getElementById('salePrice').value),
+                category: document.getElementById('category').value,
+                dateAdded: new Date().toISOString()
+            };
+            inventory.push(item);
+            saveData();
+            renderInventory();
+            toggleModal('addDeviceModal');
+            this.reset();
+            await syncToGoogleSheets('ADD_ITEM', {
+                item_model: item.model,
+                imei: item.imei,
+                cost: item.purchasePrice,
+                price: item.salePrice,
+                category: item.category
+            });
+            showToast(i18n[settings.lang]['toast-added']);
+        });
+
+        function prepareSale(id) {
+            const item = inventory.find(i => i.id === id);
+            currentSaleId = id;
+            document.getElementById('sellPreview').innerHTML = `
+                <div class="flex justify-between items-center mb-1">
+                    <span class="font-black text-indigo-900 dark:text-indigo-100">${item.model}</span>
+                </div>
+                <p class="text-[10px] text-indigo-400 font-mono mb-3">IMEI: ${item.imei}</p>
+                <div class="flex justify-between text-xs font-bold">
+                    <span>Listing Price:</span>
+                    <span class="text-indigo-600">${formatMMK(item.salePrice)}</span>
+                </div>
+            `;
+            document.getElementById('finalSoldPrice').value = item.salePrice;
+            toggleModal('sellDeviceModal');
+        }
+
+        document.getElementById('confirmSaleBtn').addEventListener('click', async () => {
+            const soldPrice = parseFloat(document.getElementById('finalSoldPrice').value);
+            const index = inventory.findIndex(i => i.id === currentSaleId);
+            if (index > -1) {
+                const item = inventory[index];
+                const saleRecord = { ...item, soldPrice, profit: soldPrice - item.purchasePrice, dateSold: new Date().toISOString() };
+                sales.push(saleRecord);
+                inventory.splice(index, 1);
+                saveData();
+                renderInventory();
+                renderSales();
+                toggleModal('sellDeviceModal');
+                await syncToGoogleSheets('RECORD_SALE', {
+                    item_model: saleRecord.model,
+                    imei: saleRecord.imei,
+                    sold_at: saleRecord.soldPrice,
+                    profit: saleRecord.profit
+                });
+                showToast(i18n[settings.lang]['toast-sold']);
+            }
+        });
+
+        function saveData() {
+            localStorage.setItem('mm_mobile_glass_inv', JSON.stringify(inventory));
+            localStorage.setItem('mm_mobile_glass_sales', JSON.stringify(sales));
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('totalStockCount').innerText = inventory.length;
+            document.getElementById('itemCountLabel').innerText = `${inventory.length} Items`;
+            const today = new Date().toLocaleDateString();
+            const incomeToday = sales.filter(s => new Date(s.dateSold).toLocaleDateString() === today).reduce((sum, s) => sum + s.soldPrice, 0);
+            document.getElementById('todayIncome').innerText = formatMMK(incomeToday);
+        }
+
+        function renderInventory() {
+            const container = document.getElementById('inventoryContainer');
+            const search = document.getElementById('inventorySearch').value.toLowerCase();
+            container.innerHTML = '';
+            inventory.filter(i => i.model.toLowerCase().includes(search) || i.imei.toLowerCase().includes(search)).forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'glass-card p-5 rounded-3xl flex justify-between items-center';
+                div.innerHTML = `
+                    <div class="space-y-1">
+                        <span class="text-[8px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full font-black uppercase">${item.category}</span>
+                        <h4 class="font-black">${item.model}</h4>
+                        <p class="text-[9px] text-slate-400 font-mono">${item.imei}</p>
+                        <p class="text-sm font-black text-indigo-600 mt-1">${formatMMK(item.salePrice)}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="prepareSale(${item.id})" class="h-10 w-10 bg-emerald-500/10 text-emerald-600 rounded-xl flex items-center justify-center"><i class="fas fa-cart-shopping"></i></button>
+                        <button onclick="deleteItem(${item.id})" class="h-10 w-10 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center"><i class="fas fa-trash-can"></i></button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderSales() {
+            const container = document.getElementById('salesContainer');
+            container.innerHTML = '';
+            sales.sort((a,b) => new Date(b.dateSold) - new Date(a.dateSold)).forEach(sale => {
+                const div = document.createElement('div');
+                div.className = 'glass-card p-5 rounded-3xl border-l-4 border-emerald-500 flex justify-between items-center';
+                div.innerHTML = `
+                    <div><h4 class="font-black text-sm">${sale.model}</h4><p class="text-[9px] text-slate-400">${new Date(sale.dateSold).toLocaleString()}</p></div>
+                    <div class="text-right"><p class="font-black text-emerald-600">${formatMMK(sale.soldPrice)}</p></div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function deleteItem(id) { if (confirm("Remove item?")) { inventory = inventory.filter(i => i.id !== id); saveData(); renderInventory(); } }
+
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.className = 'fixed top-20 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-2 rounded-xl text-[10px] z-[100]';
+            t.innerText = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2000);
+        }
+
+        document.getElementById('inventorySearch').addEventListener('input', renderInventory);
+        window.onload = initApp;
+    </script>
+</body>
+</html>
