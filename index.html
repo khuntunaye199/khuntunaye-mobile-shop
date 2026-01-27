@@ -1,168 +1,26 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Mobile Shop POS (Google Sheet)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body{
-  margin:0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto;
-  background:#0b1220;
-  color:#e6edf7;
-}
-header{
-  padding:14px 20px;
-  background:#111b36;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-button{
-  background:#1e90ff;
-  border:none;
-  color:#fff;
-  padding:8px 14px;
-  border-radius:6px;
-  cursor:pointer;
-}
-button.secondary{background:#444}
-button.danger{background:#e74c3c}
-input,select{
-  width:100%;
-  padding:8px;
-  margin-top:6px;
-  border-radius:6px;
-  border:1px solid #333;
-  background:#0f1a33;
-  color:#fff;
-}
-.card{
-  background:#111b36;
-  padding:16px;
-  border-radius:10px;
-  margin-bottom:16px;
-}
-.container{padding:20px; max-width:800px; margin:auto}
-.hidden{display:none}
-.msg{margin-top:10px}
-</style>
-</head>
+function doPost(e) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sh = ss.getSheetByName("Transactions") || ss.insertSheet("Transactions");
+    if (sh.getLastRow() === 0) sh.appendRow(["Timestamp","Type","Amount","Note","User"]);
 
-<body>
+    const data = JSON.parse(e.postData.contents);
+    const type = String(data.type||"").trim();
+    const amount = Number(data.amount||0);
+    const note = String(data.note||"").trim();
+    const user = String(data.user||"web").trim();
 
-<header>
-  <div><b>Mobile Shop POS</b></div>
-  <div>
-    <span id="userLabel">Not logged in</span>
-    <button id="logoutBtn" class="danger hidden">Logout</button>
-  </div>
-</header>
+    if (!type || !Number.isFinite(amount) || amount <= 0) {
+      return ContentService.createTextOutput(JSON.stringify({ok:false,error:"Invalid data"}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
 
-<div class="container">
-
-<!-- LOGIN -->
-<div id="loginView" class="card">
-  <h3>Login</h3>
-  <input id="loginUser" placeholder="Username (admin)">
-  <input id="loginPass" type="password" placeholder="Password (admin123)">
-  <button id="loginBtn">Login</button>
-  <div class="msg" id="loginMsg"></div>
-</div>
-
-<!-- FINANCE -->
-<div id="financeView" class="card hidden">
-  <h3>Finance (Income / Expense)</h3>
-
-  <label>Type</label>
-  <select id="finType">
-    <option>Income</option>
-    <option>Expense</option>
-  </select>
-
-  <label>Amount (MMK)</label>
-  <input id="finAmount" placeholder="50000">
-
-  <label>Note</label>
-  <input id="finNote" placeholder="Accessories sale / Electricity">
-
-  <button id="finSave">Save to Google Sheet</button>
-  <div class="msg" id="finMsg"></div>
-</div>
-
-</div>
-
-<script>
-/* ================= CONFIG ================= */
-const SHEET_API_URL = "PUT_YOUR_GOOGLE_SCRIPT_URL_HERE";
-
-/* ================= AUTH ================= */
-const DEMO_USER = {user:"admin", pass:"admin123"};
-let currentUser = null;
-
-const loginView = document.getElementById("loginView");
-const financeView = document.getElementById("financeView");
-const userLabel = document.getElementById("userLabel");
-const logoutBtn = document.getElementById("logoutBtn");
-
-document.getElementById("loginBtn").onclick = ()=>{
-  const u = loginUser.value.trim();
-  const p = loginPass.value.trim();
-  if(u===DEMO_USER.user && p===DEMO_USER.pass){
-    currentUser = u;
-    loginView.classList.add("hidden");
-    financeView.classList.remove("hidden");
-    userLabel.textContent = "User: "+u;
-    logoutBtn.classList.remove("hidden");
-  }else{
-    loginMsg.textContent="❌ Wrong login";
+    sh.appendRow([new Date(), type, amount, note, user]);
+    return ContentService.createTextOutput(JSON.stringify({ok:true}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ok:false,error:String(err)}))
+      .setMimeType(ContentService.MimeType.JSON);
   }
-};
-
-logoutBtn.onclick = ()=>{
-  currentUser=null;
-  financeView.classList.add("hidden");
-  loginView.classList.remove("hidden");
-  userLabel.textContent="Not logged in";
-  logoutBtn.classList.add("hidden");
-};
-
-/* ================= GOOGLE SHEET SAVE ================= */
-async function saveToSheet(data){
-  const res = await fetch(SHEET_API_URL,{
-    method:"POST",
-    headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body:JSON.stringify(data)
-  });
-  return await res.json();
 }
-
-document.getElementById("finSave").onclick = async ()=>{
-  const type = finType.value;
-  const amount = Number(finAmount.value);
-  const note = finNote.value;
-
-  if(!amount || amount<=0){
-    finMsg.textContent="❌ Invalid amount";
-    return;
-  }
-
-  finMsg.textContent="Saving...";
-  try{
-    await saveToSheet({
-      type:type,
-      amount:amount,
-      note:note,
-      user:currentUser
-    });
-    finMsg.textContent="✅ Saved to Google Sheet";
-    finAmount.value="";
-    finNote.value="";
-  }catch(e){
-    finMsg.textContent="❌ Error saving";
-  }
-};
-</script>
-
-</body>
-</html>
+function doGet(){ return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON); }
