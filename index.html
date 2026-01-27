@@ -1,1041 +1,168 @@
 <!doctype html>
-<html lang="my">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Mobile Shop POS - Single Page</title>
-  <style>
-    :root{
-      --bg:#0b1220;
-      --panel:#0f1a33;
-      --panel2:#0c1730;
-      --text:#e6edf7;
-      --muted:#9fb0cf;
-      --line:rgba(255,255,255,.10);
-      --brand:#6ee7ff;
-      --brand2:#a78bfa;
-      --danger:#ff6b6b;
-      --ok:#4ade80;
-      --warn:#fbbf24;
-      --shadow: 0 20px 60px rgba(0,0,0,.35);
-      --radius: 18px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans Myanmar", Arial, sans-serif;
-      background: radial-gradient(1100px 600px at 70% 10%, rgba(110,231,255,.12), transparent 60%),
-                  radial-gradient(900px 500px at 15% 30%, rgba(167,139,250,.12), transparent 60%),
-                  var(--bg);
-      color:var(--text);
-      min-height:100vh;
-    }
-    a{color:inherit}
-    .container{max-width:1100px; margin:0 auto; padding:24px;}
-    .topbar{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:16px; padding:14px 18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      position:sticky; top:16px; z-index:5;
-      backdrop-filter: blur(10px);
-    }
-    .brand{
-      display:flex; align-items:center; gap:12px;
-      font-weight:800; letter-spacing:.2px;
-    }
-    .logo{
-      width:38px; height:38px; border-radius:12px;
-      background: conic-gradient(from 180deg, var(--brand), var(--brand2));
-      box-shadow: 0 12px 30px rgba(110,231,255,.18);
-    }
-    .pill{
-      display:inline-flex; gap:8px; align-items:center;
-      padding:8px 12px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      border-radius: 999px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-    .btn{
-      border:none; cursor:pointer;
-      padding:10px 14px;
-      border-radius: 12px;
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      border:1px solid var(--line);
-      display:inline-flex; align-items:center; gap:10px;
-      transition: .15s ease;
-      user-select:none;
-    }
-    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.08);}
-    .btn.primary{
-      background: linear-gradient(135deg, rgba(110,231,255,.25), rgba(167,139,250,.25));
-      border-color: rgba(110,231,255,.35);
-    }
-    .btn.danger{
-      background: rgba(255,107,107,.12);
-      border-color: rgba(255,107,107,.35);
-      color:#ffd5d5;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap:16px;
-      margin-top:18px;
-    }
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .card .hd{
-      padding:16px 18px;
-      border-bottom:1px solid var(--line);
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-    }
-    .title{font-size:16px; font-weight:800;}
-    .sub{font-size:13px; color:var(--muted); margin-top:4px;}
-    .card .bd{padding:16px 18px;}
-    .service{
-      grid-column: span 6;
-      padding:16px 18px;
-      cursor:pointer;
-      transition:.15s ease;
-      position:relative;
-    }
-    .service:hover{transform: translateY(-2px); border-color: rgba(110,231,255,.35);}
-    .service .icon{
-      width:46px; height:46px; border-radius: 16px;
-      background: rgba(110,231,255,.12);
-      border:1px solid rgba(110,231,255,.25);
-      display:flex; align-items:center; justify-content:center;
-      font-weight:900;
-      margin-bottom:10px;
-    }
-    .service .t{font-weight:900; font-size:16px;}
-    .service .d{color:var(--muted); font-size:13px; margin-top:6px; line-height:1.4;}
-    .service .go{
-      position:absolute; right:16px; top:16px;
-      font-size:12px; color: var(--muted);
-      border:1px solid var(--line);
-      padding:6px 10px; border-radius:999px;
-      background: rgba(255,255,255,.04);
-    }
-
-    /* Dashboard layout */
-    .appShell{
-      display:grid;
-      grid-template-columns: 260px 1fr;
-      gap:16px;
-      margin-top:18px;
-    }
-    .sidebar{
-      position:sticky; top:92px;
-      height: calc(100vh - 120px);
-      overflow:auto;
-      padding:14px;
-    }
-    .navItem{
-      padding:10px 12px;
-      border-radius: 12px;
-      border:1px solid transparent;
-      cursor:pointer;
-      display:flex; align-items:center; justify-content:space-between;
-      color: var(--muted);
-      margin-bottom:8px;
-      background: rgba(255,255,255,.03);
-    }
-    .navItem:hover{background: rgba(255,255,255,.05); color: var(--text);}
-    .navItem.active{
-      color: var(--text);
-      border-color: rgba(110,231,255,.35);
-      background: rgba(110,231,255,.10);
-    }
-    .badge{
-      font-size:12px; color: var(--text);
-      padding:4px 8px; border-radius:999px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.04);
-    }
-    .content{
-      min-height: 60vh;
-    }
-    .stats{
-      display:grid; grid-template-columns: repeat(12, 1fr); gap:16px;
-    }
-    .stat{grid-column: span 4;}
-    .kpi{font-size:22px; font-weight:900; margin-top:6px;}
-    .kpi small{font-size:12px; color:var(--muted); font-weight:600;}
-    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
-    .field{
-      width:100%;
-      padding:10px 12px;
-      border-radius: 12px;
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.22);
-      color: var(--text);
-      outline:none;
-    }
-    .field::placeholder{color: rgba(159,176,207,.7);}
-    table{width:100%; border-collapse: collapse; font-size:13px;}
-    th,td{padding:10px 8px; border-bottom:1px solid var(--line); text-align:left; color:var(--text);}
-    th{color:var(--muted); font-weight:700;}
-    .right{text-align:right;}
-    .tag{
-      display:inline-flex; align-items:center; gap:8px;
-      font-size:12px;
-      padding:4px 8px;
-      border-radius: 999px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      color: var(--muted);
-    }
-    .dot{width:8px; height:8px; border-radius:99px; background: var(--ok);}
-    .dot.warn{background: var(--warn);}
-    .dot.danger{background: var(--danger);}
-
-    /* Modal */
-    .modalBackdrop{
-      position:fixed; inset:0;
-      background: rgba(0,0,0,.55);
-      display:none;
-      align-items:center; justify-content:center;
-      padding:18px;
-      z-index:50;
-    }
-    .modalBackdrop.show{display:flex;}
-    .modal{
-      width:min(520px, 100%);
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-      border:1px solid var(--line);
-      border-radius: 20px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .modal .hd{padding:16px 18px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;}
-    .modal .bd{padding:16px 18px;}
-    .hint{font-size:12px; color:var(--muted); line-height:1.5;}
-    .two{display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
-    .foot{
-      display:flex; justify-content:flex-end; gap:10px;
-      padding:14px 18px;
-      border-top:1px solid var(--line);
-      background: rgba(0,0,0,.12);
-    }
-
-    /* Responsive */
-    @media (max-width: 900px){
-      .service{grid-column: span 12;}
-      .appShell{grid-template-columns: 1fr;}
-      .sidebar{position:relative; top:auto; height:auto;}
-      .stat{grid-column: span 6;}
-    }
-    @media (max-width: 520px){
-      .stat{grid-column: span 12;}
-      .two{grid-template-columns: 1fr;}
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Mobile Shop POS (Google Sheet)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto;
+  background:#0b1220;
+  color:#e6edf7;
+}
+header{
+  padding:14px 20px;
+  background:#111b36;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+button{
+  background:#1e90ff;
+  border:none;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:6px;
+  cursor:pointer;
+}
+button.secondary{background:#444}
+button.danger{background:#e74c3c}
+input,select{
+  width:100%;
+  padding:8px;
+  margin-top:6px;
+  border-radius:6px;
+  border:1px solid #333;
+  background:#0f1a33;
+  color:#fff;
+}
+.card{
+  background:#111b36;
+  padding:16px;
+  border-radius:10px;
+  margin-bottom:16px;
+}
+.container{padding:20px; max-width:800px; margin:auto}
+.hidden{display:none}
+.msg{margin-top:10px}
+</style>
 </head>
 
 <body>
-  <div class="container">
-    <div class="topbar">
-      <div class="brand">
-        <div class="logo"></div>
-        <div>
-          <div style="display:flex; gap:10px; align-items:center;">
-            <div style="font-size:16px;">Mobile Shop POS</div>
-            <span class="pill" id="sessionPill">Not logged in</span>
-          </div>
-          <div class="sub" id="routeSub">Service Selection</div>
-        </div>
-      </div>
-      <div class="row">
-        <button class="btn" id="btnHome">🏠 Home</button>
-        <button class="btn primary" id="btnLogin">🔐 Login</button>
-        <button class="btn danger" id="btnLogout" style="display:none;">⎋ Logout</button>
-      </div>
-    </div>
 
-    <!-- HOME: Service selection -->
-    <section id="viewHome">
-      <div class="grid">
-        <div class="card service" data-service="finance">
-          <div class="go">Open →</div>
-          <div class="icon">💰</div>
-          <div class="t">Finance</div>
-          <div class="d">Daily income/expense, cashbook, simple report overview.</div>
-        </div>
-
-        <div class="card service" data-service="repair">
-          <div class="go">Open →</div>
-          <div class="icon">🛠️</div>
-          <div class="t">Repair</div>
-          <div class="d">Repair intake, status tracking, delivery & balance.</div>
-        </div>
-
-        <div class="card service" data-service="mobile_sales">
-          <div class="go">Open →</div>
-          <div class="icon">📱</div>
-          <div class="t">Mobile Sales</div>
-          <div class="d">Sell phones, invoice list, customer data & totals.</div>
-        </div>
-
-        <div class="card service" data-service="installment">
-          <div class="go">Open →</div>
-          <div class="icon">🧾</div>
-          <div class="t">Installment</div>
-          <div class="d">Installment contracts, schedules, due list & reminders.</div>
-        </div>
-
-        <div class="card service" data-service="accessories">
-          <div class="go">Open →</div>
-          <div class="icon">🎧</div>
-          <div class="t">Accessories Sales</div>
-          <div class="d">Accessory sales, stock list, fast checkout mock.</div>
-        </div>
-
-        <div class="card" style="grid-column: span 12;">
-          <div class="hd">
-            <div>
-              <div class="title">How this single-page works</div>
-              <div class="sub">Service → Login → Dashboard (all in one HTML)</div>
-            </div>
-            <span class="pill">No build / No React</span>
-          </div>
-          <div class="bd hint">
-            <b>Demo account</b>: username = <code>admin</code>, password = <code>admin123</code><br/>
-            စိတ်ကြိုက်ပြောင်းချင်ရင် script ထဲက <code>DEMO_USER</code> ကိုပြောင်းပါ။
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- DASHBOARD -->
-    <section id="viewDash" style="display:none;">
-      <div class="appShell">
-        <aside class="card sidebar">
-          <div style="padding:8px 8px 14px 8px;">
-            <div class="title" id="sideTitle">Dashboard</div>
-            <div class="sub" id="sideSub">Select a module</div>
-          </div>
-
-          <div class="navItem" data-module="overview">
-            <span>📊 Overview</span><span class="badge">Home</span>
-          </div>
-          <div class="navItem" data-module="finance">
-            <span>💰 Finance</span><span class="badge">5</span>
-          </div>
-          <div class="navItem" data-module="repair">
-            <span>🛠️ Repair</span><span class="badge">12</span>
-          </div>
-          <div class="navItem" data-module="mobile_sales">
-            <span>📱 Mobile Sales</span><span class="badge">7</span>
-          </div>
-          <div class="navItem" data-module="installment">
-            <span>🧾 Installment</span><span class="badge">3</span>
-          </div>
-          <div class="navItem" data-module="accessories">
-            <span>🎧 Accessories</span><span class="badge">9</span>
-          </div>
-
-          <div style="margin-top:14px; padding:10px 8px;">
-            <div class="hint">
-              ဒီ sidebar က မင်း React project ထဲက dashboard menu idea ကို single HTML နဲ့တူအောင်လုပ်ထားတာပါ။
-            </div>
-          </div>
-        </aside>
-
-        <main class="content">
-          <!-- module content mount here -->
-          <div id="moduleRoot"></div>
-        </main>
-      </div>
-    </section>
+<header>
+  <div><b>Mobile Shop POS</b></div>
+  <div>
+    <span id="userLabel">Not logged in</span>
+    <button id="logoutBtn" class="danger hidden">Logout</button>
   </div>
+</header>
 
-  <!-- LOGIN MODAL -->
-  <div class="modalBackdrop" id="loginBackdrop">
-    <div class="modal">
-      <div class="hd">
-        <div>
-          <div class="title">Login</div>
-          <div class="sub" id="loginSub">Please login to continue</div>
-        </div>
-        <button class="btn" id="btnCloseLogin">✖</button>
-      </div>
+<div class="container">
 
-      <div class="bd">
-        <div class="two">
-          <div>
-            <div class="sub">Username</div>
-            <input class="field" id="inpUser" placeholder="e.g. admin" autocomplete="username"/>
-          </div>
-          <div>
-            <div class="sub">Password</div>
-            <input class="field" id="inpPass" placeholder="e.g. admin123" type="password" autocomplete="current-password"/>
-          </div>
-        </div>
-        <div style="margin-top:12px;">
-          <div class="hint">Demo: <code>admin / admin123</code></div>
-          <div class="hint" id="loginErr" style="color:#ffd5d5; display:none; margin-top:8px;"></div>
-        </div>
-      </div>
+<!-- LOGIN -->
+<div id="loginView" class="card">
+  <h3>Login</h3>
+  <input id="loginUser" placeholder="Username (admin)">
+  <input id="loginPass" type="password" placeholder="Password (admin123)">
+  <button id="loginBtn">Login</button>
+  <div class="msg" id="loginMsg"></div>
+</div>
 
-      <div class="foot">
-        <button class="btn" id="btnDemoFill">✨ Fill Demo</button>
-        <button class="btn primary" id="btnDoLogin">Login</button>
-      </div>
-    </div>
-  </div>
+<!-- FINANCE -->
+<div id="financeView" class="card hidden">
+  <h3>Finance (Income / Expense)</h3>
 
-  <script>
-    // ====== Single-page state & helpers ======
-    const DEMO_USER = { username: "admin", password: "admin123", role: "Owner" };
+  <label>Type</label>
+  <select id="finType">
+    <option>Income</option>
+    <option>Expense</option>
+  </select>
 
-    const $ = (sel) => document.querySelector(sel);
-    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+  <label>Amount (MMK)</label>
+  <input id="finAmount" placeholder="50000">
 
-    const state = {
-      serviceSelected: null,   // what user clicked on home
-      module: "overview",      // which module is open in dashboard
-      user: null
-    };
+  <label>Note</label>
+  <input id="finNote" placeholder="Accessories sale / Electricity">
 
-    function saveSession(user){
-      localStorage.setItem("mspos_user", JSON.stringify(user));
-    }
-    function loadSession(){
-      const raw = localStorage.getItem("mspos_user");
-      try { return raw ? JSON.parse(raw) : null; } catch { return null; }
-    }
-    function clearSession(){
-      localStorage.removeItem("mspos_user");
-    }
+  <button id="finSave">Save to Google Sheet</button>
+  <div class="msg" id="finMsg"></div>
+</div>
 
-    function setActiveNav(module){
-      $$(".navItem").forEach(n => n.classList.toggle("active", n.dataset.module === module));
-    }
+</div>
 
-    function setRouteSub(text){ $("#routeSub").textContent = text; }
-    function setSessionPill(){
-      const pill = $("#sessionPill");
-      if(state.user){
-        pill.textContent = `${state.user.username} • ${state.user.role}`;
-      }else{
-        pill.textContent = "Not logged in";
-      }
-    }
+<script>
+/* ================= CONFIG ================= */
+const SHEET_API_URL = "PUT_YOUR_GOOGLE_SCRIPT_URL_HERE";
 
-    function showHome(){
-      $("#viewHome").style.display = "";
-      $("#viewDash").style.display = "none";
-      setRouteSub("Service Selection");
-      $("#btnLogout").style.display = "none";
-      $("#btnLogin").style.display = "";
-    }
+/* ================= AUTH ================= */
+const DEMO_USER = {user:"admin", pass:"admin123"};
+let currentUser = null;
 
-    function showDash(){
-      $("#viewHome").style.display = "none";
-      $("#viewDash").style.display = "";
-      $("#btnLogout").style.display = "";
-      $("#btnLogin").style.display = "none";
+const loginView = document.getElementById("loginView");
+const financeView = document.getElementById("financeView");
+const userLabel = document.getElementById("userLabel");
+const logoutBtn = document.getElementById("logoutBtn");
 
-      // If service selected, open that module first
-      if(state.serviceSelected){
-        state.module = state.serviceSelected;
-        state.serviceSelected = null;
-      }
-      renderModule(state.module);
-      setActiveNav(state.module);
-      setRouteSub("Dashboard");
-    }
+document.getElementById("loginBtn").onclick = ()=>{
+  const u = loginUser.value.trim();
+  const p = loginPass.value.trim();
+  if(u===DEMO_USER.user && p===DEMO_USER.pass){
+    currentUser = u;
+    loginView.classList.add("hidden");
+    financeView.classList.remove("hidden");
+    userLabel.textContent = "User: "+u;
+    logoutBtn.classList.remove("hidden");
+  }else{
+    loginMsg.textContent="❌ Wrong login";
+  }
+};
 
-    function requireLoginThenDash(){
-      if(!state.user){
-        openLogin("Login required to open dashboard");
-      } else {
-        showDash();
-      }
-    }
+logoutBtn.onclick = ()=>{
+  currentUser=null;
+  financeView.classList.add("hidden");
+  loginView.classList.remove("hidden");
+  userLabel.textContent="Not logged in";
+  logoutBtn.classList.add("hidden");
+};
 
-    // ====== Modal controls ======
-    function openLogin(subText){
-      $("#loginBackdrop").classList.add("show");
-      $("#loginSub").textContent = subText || "Please login to continue";
-      $("#loginErr").style.display = "none";
-      setTimeout(()=> $("#inpUser").focus(), 50);
-    }
-    function closeLogin(){
-      $("#loginBackdrop").classList.remove("show");
-    }
+/* ================= GOOGLE SHEET SAVE ================= */
+async function saveToSheet(data){
+  const res = await fetch(SHEET_API_URL,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(data)
+  });
+  return await res.json();
+}
 
-    // ====== Render module views ======
-    function money(n){
-      return new Intl.NumberFormat("en-US").format(n);
-    }
+document.getElementById("finSave").onclick = async ()=>{
+  const type = finType.value;
+  const amount = Number(finAmount.value);
+  const note = finNote.value;
 
-    function moduleOverview(){
-      const today = new Date().toLocaleDateString("en-GB", {year:"numeric", month:"short", day:"2-digit"});
-      return `
-        <div class="card">
-          <div class="hd">
-            <div>
-              <div class="title">Overview</div>
-              <div class="sub">Quick snapshot • ${today}</div>
-            </div>
-            <span class="pill">Single HTML Template</span>
-          </div>
-          <div class="bd">
-            <div class="stats">
-              <div class="card stat">
-                <div class="bd">
-                  <div class="sub">Today Sales</div>
-                  <div class="kpi">${money(1850000)} <small>MMK</small></div>
-                  <div class="tag"><span class="dot"></span> On track</div>
-                </div>
-              </div>
-              <div class="card stat">
-                <div class="bd">
-                  <div class="sub">Repairs In Progress</div>
-                  <div class="kpi">${12} <small>jobs</small></div>
-                  <div class="tag"><span class="dot warn"></span> Needs follow-up</div>
-                </div>
-              </div>
-              <div class="card stat">
-                <div class="bd">
-                  <div class="sub">Installments Due</div>
-                  <div class="kpi">${3} <small>customers</small></div>
-                  <div class="tag"><span class="dot danger"></span> Urgent</div>
-                </div>
-              </div>
-            </div>
+  if(!amount || amount<=0){
+    finMsg.textContent="❌ Invalid amount";
+    return;
+  }
 
-            <div style="height:14px;"></div>
-
-            <div class="card">
-              <div class="hd">
-                <div>
-                  <div class="title">Recent activity</div>
-                  <div class="sub">Mock data</div>
-                </div>
-              </div>
-              <div class="bd">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Type</th>
-                      <th>Description</th>
-                      <th class="right">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td>${today}</td><td>Sale</td><td>iPhone case x2</td><td class="right">${money(25000)} MMK</td></tr>
-                    <tr><td>${today}</td><td>Repair</td><td>Screen replacement (A12)</td><td class="right">${money(85000)} MMK</td></tr>
-                    <tr><td>${today}</td><td>Finance</td><td>Shop rent (partial)</td><td class="right">${money(150000)} MMK</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function moduleFinance(){
-      return `
-        <div class="card">
-          <div class="hd">
-            <div>
-              <div class="title">Finance Dashboard</div>
-              <div class="sub">Income / Expense • Cashbook</div>
-            </div>
-            <span class="pill">💰 Finance</span>
-          </div>
-          <div class="bd">
-            <div class="card">
-              <div class="hd">
-                <div>
-                  <div class="title">Add transaction</div>
-                  <div class="sub">Mock form (not connected)</div>
-                </div>
-              </div>
-              <div class="bd">
-                <div class="two">
-                  <div>
-                    <div class="sub">Type</div>
-                    <select class="field">
-                      <option>Income</option>
-                      <option>Expense</option>
-                    </select>
-                  </div>
-                  <div>
-                    <div class="sub">Amount (MMK)</div>
-                    <input class="field" placeholder="e.g. 50000"/>
-                  </div>
-                </div>
-                <div style="margin-top:12px;">
-                  <div class="sub">Note</div>
-                  <input class="field" placeholder="e.g. Accessories sale / Electricity bill"/>
-                </div>
-                <div style="margin-top:12px; display:flex; justify-content:flex-end;">
-                  <button class="btn primary" onclick="alert('Template only: connect to backend/database to save.')">Save</button>
-                </div>
-              </div>
-            </div>
-
-            <div style="height:14px;"></div>
-
-            <div class="card">
-              <div class="hd">
-                <div>
-                  <div class="title">Today summary</div>
-                  <div class="sub">Mock numbers</div>
-                </div>
-              </div>
-              <div class="bd">
-                <table>
-                  <thead><tr><th>Item</th><th class="right">MMK</th></tr></thead>
-                  <tbody>
-                    <tr><td>Income</td><td class="right">${money(2100000)}</td></tr>
-                    <tr><td>Expense</td><td class="right">${money(250000)}</td></tr>
-                    <tr><td><b>Net</b></td><td class="right"><b>${money(1850000)}</b></td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function moduleRepair(){
-      return `
-        <div class="card">
-          <div class="hd">
-            <div>
-              <div class="title">Repair Dashboard</div>
-              <div class="sub">Intake → Progress → Delivered</div>
-            </div>
-            <span class="pill">🛠️ Repair</span>
-          </div>
-          <div class="bd">
-            <div class="card">
-              <div class="hd">
-                <div>
-                  <div class="title">New repair intake</div>
-                  <div class="sub">Mock form</div>
-                </div>
-              </div>
-              <div class="bd">
-                <div class="two">
-                  <div>
-                    <div class="sub">Customer</div>
-                    <input class="field" placeholder="e.g. Mg Aung"/>
-                  </div>
-                  <div>
-                    <div class="sub">Phone model</div>
-                    <input class="field" placeholder="e.g. Samsung A32"/>
-                  </div>
-                </div>
-                <div style="margin-top:12px;">
-                  <div class="sub">Issue</div>
-                  <input class="field" placeholder="e.g. No power / screen crack"/>
-                </div>
-                <div style="margin-top:12px; display:flex; justify-content:flex-end;">
-                  <button class="btn primary" onclick="alert('Template only: connect to backend/database to save.')">Create job</button>
-                </div>
-              </div>
-            </div>
-
-            <div style="height:14px;"></div>
-
-            <div class="card">
-              <div class="hd">
-                <div>
-                  <div class="title">Repair jobs</div>
-                  <div class="sub">Mock list</div>
-                </div>
-              </div>
-              <div class="bd">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Job ID</th><th>Customer</th><th>Model</th><th>Status</th><th class="right">Fee</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>#R-1021</td><td>Su Su</td><td>iPhone 11</td>
-                      <td><span class="tag"><span class="dot warn"></span> Waiting parts</span></td>
-                      <td class="right">${money(120000)} MMK</td>
-                    </tr>
-                    <tr>
-                      <td>#R-1022</td><td>Ko Min</td><td>OPPO A54</td>
-                      <td><span class="tag"><span class="dot"></span> In progress</span></td>
-                      <td class="right">${money(65000)} MMK</td>
-                    </tr>
-                    <tr>
-                      <td>#R-1023</td><td>Hnin</td><td>Vivo Y20</td>
-                      <td><span class="tag"><span class="dot danger"></span> Need call</span></td>
-                      <td class="right">${money(45000)} MMK</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function moduleMobileSales(){
-      return `
-        <div class="card">
-          <div class="hd">
-            <div>
-              <div class="title">Mobile Sales Dashboard</div>
-              <div class="sub">Invoice list • Customer • Totals</div>
-            </div>
-            <span class="pill">📱 Mobile Sales</span>
-          </div>
-          <div class="bd">
-            <div class="card">
-              <div class="hd">
-                <div>
-                  <div class="title">Quick sale</div>
-                  <div class="sub">Mock POS style</div>
-                </div>
-              </div>
-              <div class="bd">
-                <div class="two">
-                  <div>
-                    <div class="sub">Phone model</div>
-                    <input class="field" placeholder="e.g. iPhone 13 Pro Max"/>
-                  </div>
-                  <div>
-                    <div class="sub">Price (MMK)</div>
-                    <input class="field" placeholder="e.g. 2500000"/>
-                  </div>
-                </div>
-                <div style="margin-top:12px;">
-                  <div class="sub">Customer name</div>
-                  <input class="field" placeholder="e.g. Ma Thet"/>
-                </div>
-                <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:10px;">
-                  <button class="btn" onclick="alert('Template only: print feature requires extra JS / print layout.')">Print</button>
-                  <button class="btn primary" onclick="alert('Template only: connect to backend/database to save invoice.')">Checkout</button>
-                </div>
-              </div>
-            </div>
-
-            <div style="height:14px;"></div>
-
-            <div class="card">
-              <div class="hd">
-                <div>
-                  <div class="title">Recent invoices</div>
-                  <div class="sub">Mock list</div>
-                </div>
-              </div>
-              <div class="bd">
-                <table>
-                  <thead><tr><th>Invoice</th><th>Customer</th><th>Model</th><th class="right">Total</th></tr></thead>
-                  <tbody>
-                    <tr><td>INV-3001</td><td>Ko Aye</td><td>Samsung S21</td><td class="right">${money(1900000)} MMK</td></tr>
-                    <tr><td>INV-3002</td><td>Ma Nwe</td><td>iPhone 12</td><td class="right">${money(2100000)} MMK</td></tr>
-                    <tr><td>INV-3003</td><td>Su</td><td>OPPO Reno</td><td class="right">${money(1350000)} MMK</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function moduleInstallment(){
-      return `
-        <div class="card">
-          <div class="hd">
-            <div>
-              <div class="title">Installment Dashboard</div>
-              <div class="sub">Contracts • Due list • Reminders</div>
-            </div>
-            <span class="pill">🧾 Installment</span>
-          </div>
-          <div class="bd">
-            <div class="card">
-              <div class="hd">
-                <div>
-                  <div class="title">Due list</div>
-                  <div class="sub">Mock reminders</div>
-                </div>
-              </div>
-              <div class="bd">
-                <table>
-                  <thead><tr><th>Customer</th><th>Contract</th><th>Due date</th><th class="right">Due</th></tr></thead>
-                  <tbody>
-                    <tr><td>Ko Zaw</td><td>INS-9901</td><td>2026-02-03</td><td class="right">${money(120000)} MMK</td></tr>
-                    <tr><td>Hla Hla</td><td>INS-9902</td><td>2026-02-06</td><td class="right">${money(90000)} MMK</td></tr>
-                    <tr><td>Mg Tun</td><td>INS-9903</td><td>2026-02-10</td><td class="right">${money(150000)} MMK</td></tr>
-                  </tbody>
-                </table>
-                <div class="hint" style="margin-top:10px;">Reminder SMS/Call feature ထည့်ချင်ရင် backend + messaging integration လိုပါမယ်။</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function moduleAccessories(){
-      return `
-        <div class="card">
-          <div class="hd">
-            <div>
-              <div class="title">Accessories Sales</div>
-              <div class="sub">Stock + Quick checkout mock</div>
-            </div>
-            <span class="pill">🎧 Accessories</span>
-          </div>
-          <div class="bd">
-            <div class="card">
-              <div class="hd">
-                <div>
-                  <div class="title">Quick cart</div>
-                  <div class="sub">Client-side only (local)</div>
-                </div>
-              </div>
-              <div class="bd">
-                <div class="two">
-                  <div>
-                    <div class="sub">Item</div>
-                    <input class="field" id="accItem" placeholder="e.g. Type-C Cable"/>
-                  </div>
-                  <div>
-                    <div class="sub">Price (MMK)</div>
-                    <input class="field" id="accPrice" placeholder="e.g. 8000"/>
-                  </div>
-                </div>
-                <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:10px;">
-                  <button class="btn" id="btnAccAdd">Add to cart</button>
-                  <button class="btn primary" id="btnAccCheckout">Checkout</button>
-                </div>
-
-                <div style="height:12px;"></div>
-                <div class="card">
-                  <div class="hd">
-                    <div>
-                      <div class="title">Cart</div>
-                      <div class="sub">Local list</div>
-                    </div>
-                    <span class="pill" id="accTotalPill">Total: 0 MMK</span>
-                  </div>
-                  <div class="bd" id="accCart"></div>
-                </div>
-              </div>
-            </div>
-
-            <div style="height:14px;"></div>
-
-            <div class="card">
-              <div class="hd">
-                <div>
-                  <div class="title">Stock list</div>
-                  <div class="sub">Mock data</div>
-                </div>
-              </div>
-              <div class="bd">
-                <table>
-                  <thead><tr><th>Item</th><th class="right">Qty</th><th class="right">Price</th></tr></thead>
-                  <tbody>
-                    <tr><td>Earphone</td><td class="right">18</td><td class="right">${money(12000)} MMK</td></tr>
-                    <tr><td>Charger</td><td class="right">12</td><td class="right">${money(18000)} MMK</td></tr>
-                    <tr><td>Type-C Cable</td><td class="right">25</td><td class="right">${money(8000)} MMK</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderModule(module){
-      const root = $("#moduleRoot");
-      $("#sideTitle").textContent = "Dashboard";
-      $("#sideSub").textContent = state.user ? `Welcome, ${state.user.username}` : "Select a module";
-
-      let html = "";
-      if(module === "overview") html = moduleOverview();
-      else if(module === "finance") html = moduleFinance();
-      else if(module === "repair") html = moduleRepair();
-      else if(module === "mobile_sales") html = moduleMobileSales();
-      else if(module === "installment") html = moduleInstallment();
-      else if(module === "accessories") html = moduleAccessories();
-      else html = `<div class="card"><div class="bd">Unknown module</div></div>`;
-
-      root.innerHTML = html;
-
-      // bind accessories cart after render
-      if(module === "accessories"){
-        bindAccessoriesCart();
-      }
-    }
-
-    // ====== Accessories cart (client-side only) ======
-    let accCart = [];
-    function bindAccessoriesCart(){
-      const cartBox = $("#accCart");
-      const totalPill = $("#accTotalPill");
-
-      function rerender(){
-        if(accCart.length === 0){
-          cartBox.innerHTML = `<div class="hint">Cart empty. Add items.</div>`;
-        }else{
-          cartBox.innerHTML = `
-            <table>
-              <thead><tr><th>Item</th><th class="right">Price</th><th class="right">Action</th></tr></thead>
-              <tbody>
-                ${accCart.map((it, idx)=>`
-                  <tr>
-                    <td>${escapeHtml(it.name)}</td>
-                    <td class="right">${money(it.price)} MMK</td>
-                    <td class="right"><button class="btn" data-rm="${idx}">Remove</button></td>
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          `;
-        }
-        const total = accCart.reduce((s,x)=>s+x.price,0);
-        totalPill.textContent = `Total: ${money(total)} MMK`;
-
-        cartBox.querySelectorAll("[data-rm]").forEach(btn=>{
-          btn.addEventListener("click", ()=>{
-            const i = Number(btn.dataset.rm);
-            accCart.splice(i,1);
-            rerender();
-          });
-        });
-      }
-
-      $("#btnAccAdd").onclick = ()=>{
-        const name = ($("#accItem").value || "").trim();
-        const price = Number(($("#accPrice").value || "").trim());
-        if(!name || !Number.isFinite(price) || price <= 0){
-          alert("Please enter valid item and price.");
-          return;
-        }
-        accCart.push({name, price});
-        $("#accItem").value = "";
-        $("#accPrice").value = "";
-        rerender();
-      };
-
-      $("#btnAccCheckout").onclick = ()=>{
-        const total = accCart.reduce((s,x)=>s+x.price,0);
-        if(total === 0){
-          alert("Cart is empty.");
-          return;
-        }
-        alert(`Checkout (template): Total = ${money(total)} MMK\n\nBackend + receipt print ကိုထည့်ချင်ရင် ပြောပါ။`);
-        accCart = [];
-        rerender();
-      };
-
-      rerender();
-    }
-
-    function escapeHtml(str){
-      return str.replace(/[&<>"']/g, (m)=>({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-      }[m]));
-    }
-
-    // ====== Events ======
-    $("#btnHome").addEventListener("click", showHome);
-
-    $("#btnLogin").addEventListener("click", ()=>{
-      openLogin("Please login to continue");
+  finMsg.textContent="Saving...";
+  try{
+    await saveToSheet({
+      type:type,
+      amount:amount,
+      note:note,
+      user:currentUser
     });
-    $("#btnLogout").addEventListener("click", ()=>{
-      state.user = null;
-      clearSession();
-      setSessionPill();
-      showHome();
-    });
+    finMsg.textContent="✅ Saved to Google Sheet";
+    finAmount.value="";
+    finNote.value="";
+  }catch(e){
+    finMsg.textContent="❌ Error saving";
+  }
+};
+</script>
 
-    $$(".service").forEach(card=>{
-      card.addEventListener("click", ()=>{
-        state.serviceSelected = card.dataset.service;
-        requireLoginThenDash();
-      });
-    });
-
-    $$(".navItem").forEach(n=>{
-      n.addEventListener("click", ()=>{
-        state.module = n.dataset.module;
-        renderModule(state.module);
-        setActiveNav(state.module);
-      });
-    });
-
-    $("#btnCloseLogin").addEventListener("click", closeLogin);
-    $("#loginBackdrop").addEventListener("click", (e)=>{
-      if(e.target === $("#loginBackdrop")) closeLogin();
-    });
-
-    $("#btnDemoFill").addEventListener("click", ()=>{
-      $("#inpUser").value = DEMO_USER.username;
-      $("#inpPass").value = DEMO_USER.password;
-    });
-
-    $("#btnDoLogin").addEventListener("click", ()=>{
-      const u = ($("#inpUser").value || "").trim();
-      const p = ($("#inpPass").value || "").trim();
-
-      const ok = (u === DEMO_USER.username && p === DEMO_USER.password);
-      if(!ok){
-        $("#loginErr").style.display = "";
-        $("#loginErr").textContent = "Wrong username or password.";
-        return;
-      }
-      state.user = { username: DEMO_USER.username, role: DEMO_USER.role };
-      saveSession(state.user);
-      setSessionPill();
-      closeLogin();
-      showDash();
-    });
-
-    // Enter key to login
-    ["#inpUser", "#inpPass"].forEach(id=>{
-      $(id).addEventListener("keydown", (e)=>{
-        if(e.key === "Enter") $("#btnDoLogin").click();
-      });
-    });
-
-    // ====== Boot ======
-    (function init(){
-      state.user = loadSession();
-      setSessionPill();
-
-      // default: home
-      showHome();
-
-      // If already logged in, user can open dashboard quickly
-      if(state.user){
-        // keep home visible; user can click service to jump
-      }
-    })();
-  </script>
 </body>
 </html>
