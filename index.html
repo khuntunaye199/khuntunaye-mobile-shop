@@ -1,196 +1,956 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="my">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Phone Sales Tracker</title>
-    
-    <link rel="manifest" href='data:application/manifest+json,{"name":"Phone Sales Tracker","short_name":"PhoneSales","description":"Phone Sales Inventory Management App","start_url":".","display":"standalone","background_color":"#020617","theme_color":"#059669","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/1043/1043444.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
-    
-    <meta name="theme-color" content="#059669">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1043/1043444.png">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <style>
-        body { font-family: 'Padauk', 'Roboto', sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; user-select: none; }
-        .dark body { background-color: #020617; }
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
-        .animate-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>mPOS Style - Mobile Shop POS (Single HTML + Google Sheet)</title>
+  <style>
+    :root{
+      --bg:#070b14;
+      --panel:#0c1224;
+      --panel2:#0e1833;
+      --text:#eaf0ff;
+      --muted:#9fb0cf;
+      --line:rgba(255,255,255,.10);
+      --brand:#38bdf8;
+      --brand2:#a78bfa;
+      --danger:#ff5c5c;
+      --ok:#4ade80;
+      --warn:#fbbf24;
+      --shadow: 0 18px 55px rgba(0,0,0,.45);
+      --radius: 18px;
+      --r2: 14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans Myanmar", Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1000px 520px at 70% 10%, rgba(56,189,248,.14), transparent 60%),
+        radial-gradient(900px 520px at 15% 30%, rgba(167,139,250,.14), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+    }
+    a{color:inherit}
+    .wrap{max-width:1180px; margin:0 auto; padding:18px;}
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:14px; padding:14px 16px;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      position:sticky; top:14px; z-index:10;
+      backdrop-filter: blur(10px);
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      font-weight:900;
+    }
+    .logo{
+      width:38px; height:38px; border-radius:14px;
+      background: conic-gradient(from 180deg, var(--brand), var(--brand2));
+      box-shadow: 0 12px 34px rgba(56,189,248,.18);
+    }
+    .brandText .t{font-size:15px; letter-spacing:.2px}
+    .brandText .s{font-size:12px; color:var(--muted); margin-top:2px}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color:var(--muted);
+      font-size: 13px;
+      white-space:nowrap;
+    }
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .btn{
+      border:none; cursor:pointer;
+      padding:10px 14px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      transition: .15s ease;
+      display:inline-flex; align-items:center; gap:10px;
+      user-select:none;
+    }
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.09);}
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(56,189,248,.25), rgba(167,139,250,.25));
+      border-color: rgba(56,189,248,.35);
+    }
+    .btn.danger{
+      background: rgba(255,92,92,.14);
+      border-color: rgba(255,92,92,.35);
+      color:#ffd6d6;
+    }
+    .btn.ghost{background: transparent}
+    .layout{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    .card{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding:14px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      border-bottom:1px solid var(--line);
+    }
+    .title{font-weight:900; font-size:15px}
+    .sub{font-size:12px; color:var(--muted); margin-top:4px; line-height:1.4}
+    .card .bd{padding:14px 16px;}
+    .sidebar{
+      position:sticky; top:84px;
+      height: calc(100vh - 112px);
+      overflow:auto;
+    }
+    .navGroupTitle{
+      font-size:12px; color:var(--muted);
+      padding:12px 12px 8px 12px;
+      letter-spacing:.4px;
+      text-transform: uppercase;
+    }
+    .navItem{
+      margin:0 10px 10px 10px;
+      padding:11px 12px;
+      border-radius: 14px;
+      border:1px solid transparent;
+      cursor:pointer;
+      background: rgba(0,0,0,.18);
+      display:flex; justify-content:space-between; align-items:center;
+      color: var(--muted);
+      transition:.12s ease;
+    }
+    .navItem:hover{background: rgba(255,255,255,.06); color: var(--text);}
+    .navItem.active{
+      background: rgba(56,189,248,.10);
+      border-color: rgba(56,189,248,.35);
+      color: var(--text);
+    }
+    .badge{
+      font-size:12px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+    }
 
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.2.0",
-        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-        "recharts": "https://esm.sh/recharts@2.10.3",
-        "lucide-react": "https://esm.sh/lucide-react@0.263.1"
+    /* Modules / widgets */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:14px;
+    }
+    .kpiCard{grid-column: span 4;}
+    .kpi{
+      font-size:22px; font-weight:900; margin-top:6px;
+    }
+    .kpi small{font-size:12px; color:var(--muted); font-weight:700}
+    .tag{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+    }
+    .dot{width:8px; height:8px; border-radius:99px; background: var(--ok);}
+    .dot.warn{background: var(--warn);}
+    .dot.danger{background: var(--danger);}
+    .field{
+      width:100%;
+      padding:10px 12px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      outline:none;
+    }
+    .field::placeholder{color: rgba(159,176,207,.72);}
+    .two{display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
+    .hint{font-size:12px; color:var(--muted); line-height:1.5}
+    .msg{font-size:12px; margin-top:10px; color:var(--muted)}
+    .msg.ok{color:#c7ffe0}
+    .msg.err{color:#ffd6d6}
+    table{width:100%; border-collapse: collapse; font-size:13px;}
+    th,td{padding:10px 8px; border-bottom:1px solid var(--line); text-align:left;}
+    th{color:var(--muted); font-weight:800;}
+    .right{text-align:right;}
+    .chip{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      display:inline-flex; align-items:center; gap:8px;
+      white-space:nowrap;
+    }
+
+    /* Login modal */
+    .backdrop{
+      position:fixed; inset:0;
+      display:none;
+      align-items:center; justify-content:center;
+      padding:18px;
+      background: rgba(0,0,0,.62);
+      z-index:50;
+    }
+    .backdrop.show{display:flex;}
+    .modal{
+      width:min(540px, 100%);
+      border-radius: 20px;
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modal .hd{padding:14px 16px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;}
+    .modal .bd{padding:14px 16px;}
+    .modal .ft{padding:14px 16px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:10px; background: rgba(0,0,0,.12);}
+
+    /* Mobile */
+    @media (max-width: 980px){
+      .layout{grid-template-columns:1fr;}
+      .sidebar{position:relative; top:auto; height:auto;}
+      .kpiCard{grid-column: span 6;}
+    }
+    @media (max-width: 560px){
+      .kpiCard{grid-column: span 12;}
+      .two{grid-template-columns:1fr;}
+      .topbar{gap:10px}
+      .pill{display:none}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div class="brandText">
+          <div class="t">mPOS • Mobile Shop</div>
+          <div class="s" id="routeSub">Overview</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="pill" id="sessionPill">Not logged in</span>
+        <button class="btn ghost" id="btnToggleNav">☰ Menu</button>
+        <button class="btn" id="btnLogin">🔐 Login</button>
+        <button class="btn danger" id="btnLogout" style="display:none;">⎋ Logout</button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- Sidebar -->
+      <aside class="card sidebar" id="sidebar">
+        <div class="hd">
+          <div>
+            <div class="title">Navigation</div>
+            <div class="sub" id="sideSub">Choose module</div>
+          </div>
+          <span class="badge" id="roleBadge">Guest</span>
+        </div>
+
+        <div class="navGroupTitle">Main</div>
+        <div class="navItem active" data-module="overview"><span>📊 Overview</span><span class="badge">Home</span></div>
+        <div class="navItem" data-module="finance"><span>💰 Finance</span><span class="badge">IN/OUT</span></div>
+
+        <div class="navGroupTitle">Shop</div>
+        <div class="navItem" data-module="repair"><span>🛠️ Repair</span><span class="badge">Jobs</span></div>
+        <div class="navItem" data-module="mobile_sales"><span>📱 Mobile Sales</span><span class="badge">POS</span></div>
+        <div class="navItem" data-module="accessories"><span>🎧 Accessories</span><span class="badge">Cart</span></div>
+        <div class="navItem" data-module="installment"><span>🧾 Installment</span><span class="badge">Due</span></div>
+
+        <div class="bd">
+          <div class="hint">
+            ✅ Single HTML Demo UI (mPOS style) <br/>
+            ✅ Finance သာ Google Sheet ချိတ်ပြီး အစုံတင်ထားပါတယ်။ <br/>
+            (Other modules က UI/demo data ပါ)
+          </div>
+        </div>
+      </aside>
+
+      <!-- Content -->
+      <main id="moduleRoot"></main>
+    </div>
+  </div>
+
+  <!-- Login modal -->
+  <div class="backdrop" id="loginBackdrop">
+    <div class="modal">
+      <div class="hd">
+        <div>
+          <div class="title">Login</div>
+          <div class="sub" id="loginSub">Login required</div>
+        </div>
+        <button class="btn" id="btnCloseLogin">✖</button>
+      </div>
+      <div class="bd">
+        <div class="two">
+          <div>
+            <div class="sub">Username</div>
+            <input class="field" id="inpUser" placeholder="admin" autocomplete="username">
+          </div>
+          <div>
+            <div class="sub">Password</div>
+            <input class="field" id="inpPass" placeholder="admin123" type="password" autocomplete="current-password">
+          </div>
+        </div>
+        <div class="msg err" id="loginErr" style="display:none;"></div>
+        <div class="hint" style="margin-top:10px;">Demo: <code>admin / admin123</code></div>
+      </div>
+      <div class="ft">
+        <button class="btn" id="btnDemoFill">✨ Fill demo</button>
+        <button class="btn primary" id="btnDoLogin">Login</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ===================== CONFIG ===================== */
+    // 🔴 Paste your Google Apps Script Web App URL here:
+    const SHEET_API_URL = "PUT_YOUR_GOOGLE_SCRIPT_URL_HERE";
+
+    // Demo login:
+    const DEMO_USER = { username: "admin", password: "admin123", role: "Owner" };
+
+    /* ===================== State ===================== */
+    const $ = (s)=>document.querySelector(s);
+    const $$ = (s)=>Array.from(document.querySelectorAll(s));
+
+    const state = {
+      user: null,
+      module: "overview",
+      navOpen: true
+    };
+
+    function saveSession(user){ localStorage.setItem("mpos_user", JSON.stringify(user)); }
+    function loadSession(){ try { return JSON.parse(localStorage.getItem("mpos_user")||"null"); } catch { return null; } }
+    function clearSession(){ localStorage.removeItem("mpos_user"); }
+
+    function setSessionUI(){
+      const pill = $("#sessionPill");
+      const role = $("#roleBadge");
+      const sideSub = $("#sideSub");
+      const btnLogin = $("#btnLogin");
+      const btnLogout = $("#btnLogout");
+
+      if(state.user){
+        pill.textContent = `${state.user.username} • ${state.user.role}`;
+        role.textContent = state.user.role;
+        sideSub.textContent = `Welcome, ${state.user.username}`;
+        btnLogin.style.display = "none";
+        btnLogout.style.display = "";
+      } else {
+        pill.textContent = "Not logged in";
+        role.textContent = "Guest";
+        sideSub.textContent = "Choose module";
+        btnLogin.style.display = "";
+        btnLogout.style.display = "none";
       }
     }
-    </script>
-</head>
-<body>
-    <div id="root"></div>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            const swCode = `
-                const CACHE_NAME = 'phone-sales-v1';
-                self.addEventListener('install', e => {
-                    e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./'])));
-                });
-                self.addEventListener('fetch', e => {
-                    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
-                });
-            `;
-            const blob = new Blob([swCode], { type: 'application/javascript' });
-            const swUrl = URL.createObjectURL(blob);
-            navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Error:', err));
-        }
-    </script>
+    function setRouteSub(txt){ $("#routeSub").textContent = txt; }
 
-    <script type="module">
-        import React, { useState, useEffect, useMemo } from 'react';
-        import ReactDOM from 'react-dom/client';
-        import { Plus, Search, Trash2, Smartphone, Settings, Download, X, BarChart3, Sun, Moon, Monitor, Calendar, Info, ArrowDownToLine } from 'lucide-react';
-        import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+    function setActiveNav(module){
+      $$(".navItem").forEach(n=>n.classList.toggle("active", n.dataset.module === module));
+    }
 
-        const INITIAL_DATA = [
-          { id: '1', date: '2026-01-01', model: 'Redmi 14c', price: 400000, specs: '8/128' },
-          { id: '2', date: '2026-01-02', model: 'iPhone 15 Pro', price: 3500000, specs: '256GB' }
-        ];
+    /* ===================== Google Sheet (Finance) ===================== */
+    async function saveTransactionToSheet({ type, amount, note, user }){
+      if(!SHEET_API_URL || SHEET_API_URL.includes("PUT_YOUR")){
+        throw new Error("SHEET_API_URL မထည့်ရသေးပါ (Apps Script Web App URL ထည့်ပါ)");
+      }
+      const res = await fetch(SHEET_API_URL, {
+        method: "POST",
+        headers: { "Content-Type":"text/plain;charset=utf-8" },
+        body: JSON.stringify({ type, amount, note, user })
+      });
+      const json = await res.json().catch(()=>({ok:false, error:"Invalid JSON response"}));
+      if(!res.ok || !json.ok) throw new Error(json.error || "Save failed");
+      return json;
+    }
 
-        const App = () => {
-          const [sales, setSales] = useState(() => JSON.parse(localStorage.getItem('phone_sales_data')) || INITIAL_DATA);
-          const [theme, setTheme] = useState(localStorage.getItem('app_theme') || 'system');
-          const [searchTerm, setSearchTerm] = useState('');
-          const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-          const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-          const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
-          const [newSale, setNewSale] = useState({ date: new Date().toISOString().split('T')[0], model: '', price: '', specs: '' });
+    /* ===================== Modules ===================== */
+    function money(n){ return new Intl.NumberFormat("en-US").format(n); }
+    function todayStr(){
+      return new Date().toLocaleDateString("en-GB", {year:"numeric", month:"short", day:"2-digit"});
+    }
+    function esc(s){
+      return String(s).replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[m]));
+    }
 
-          useEffect(() => {
-            const root = window.document.documentElement;
-            const applyTheme = (t) => {
-              let actualTheme = t === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
-              actualTheme === 'dark' ? root.classList.add('dark') : root.classList.remove('dark');
-            };
-            applyTheme(theme);
-            localStorage.setItem('app_theme', theme);
-          }, [theme]);
-
-          useEffect(() => { localStorage.setItem('phone_sales_data', JSON.stringify(sales)); }, [sales]);
-
-          const stats = useMemo(() => ({
-            totalRevenue: sales.reduce((sum, s) => sum + Number(s.price), 0),
-            totalUnits: sales.length,
-            dailyTotal: sales.filter(s => s.date === new Date().toISOString().split('T')[0]).reduce((sum, s) => sum + Number(s.price), 0)
-          }), [sales]);
-
-          const filteredSales = sales.filter(s => s.model.toLowerCase().includes(searchTerm.toLowerCase()));
-
-          return (
-            <div className="min-h-screen pb-24 bg-slate-50 dark:bg-slate-950 transition-colors text-slate-900 dark:text-slate-100">
-              <header className="bg-emerald-600 dark:bg-emerald-700 text-white p-6 rounded-b-[2.5rem] shadow-xl sticky top-0 z-20">
-                <div className="max-w-4xl mx-auto flex justify-between items-start">
-                  <div>
-                    <h1 className="text-xl font-bold">ဖုန်းအရောင်းစာရင်း</h1>
-                    <p className="text-xs opacity-75">စုစုပေါင်း: {new Intl.NumberFormat().format(stats.totalRevenue)} Ks</p>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button onClick={() => setIsInstallModalOpen(true)} className="bg-white/20 p-2 rounded-xl"><ArrowDownToLine size={20} /></button>
-                    <button onClick={() => setIsSettingsOpen(true)} className="bg-white/20 p-2 rounded-xl"><Settings size={20} /></button>
-                  </div>
-                </div>
-                <div className="max-w-4xl mx-auto mt-6">
-                  <button onClick={() => setIsAddModalOpen(true)} className="w-full bg-white dark:bg-slate-100 text-emerald-700 font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center space-x-2">
-                    <Plus size={20} /><span>စာရင်းအသစ်ထည့်မည်</span>
-                  </button>
-                </div>
-              </header>
-
-              <main className="max-w-4xl mx-auto p-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border dark:border-slate-800">
-                    <p className="text-xs text-slate-500 uppercase">ယနေ့အရောင်း</p>
-                    <h3 className="text-lg font-bold text-emerald-600">{new Intl.NumberFormat().format(stats.dailyTotal)}</h3>
-                  </div>
-                  <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border dark:border-slate-800">
-                    <p className="text-xs text-slate-500 uppercase">စုစုပေါင်း</p>
-                    <h3 className="text-lg font-bold text-blue-600">{stats.totalUnits} လုံး</h3>
-                  </div>
-                </div>
-
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input type="text" placeholder="ရှာဖွေရန်..." className="w-full bg-white dark:bg-slate-900 p-4 pl-12 rounded-2xl border dark:border-slate-800 outline-none" onChange={(e)=>setSearchTerm(e.target.value)} />
-                </div>
-
-                <div className="space-y-3">
-                  {filteredSales.map(sale => (
-                    <div key={sale.id} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border dark:border-slate-800 flex justify-between items-center animate-in">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-emerald-600"><Smartphone size={20} /></div>
-                        <div>
-                          <h4 className="font-bold">{sale.model}</h4>
-                          <p className="text-[10px] text-slate-400">{sale.date} • {sale.specs}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <span className="font-bold text-emerald-600">{new Intl.NumberFormat().format(sale.price)}</span>
-                        <button onClick={() => setSales(sales.filter(s => s.id !== sale.id))} className="text-slate-300 hover:text-red-500"><Trash2 size={18} /></button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </main>
-
-              {/* Add Modal */}
-              {isAddModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center">
-                  <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-t-[2rem] sm:rounded-3xl p-8 animate-in">
-                    <h2 className="text-xl font-bold mb-6">စာရင်းအသစ်</h2>
-                    <div className="space-y-4">
-                      <input type="text" placeholder="ဖုန်းမော်ဒယ်" className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border dark:border-slate-700" value={newSale.model} onChange={e=>setNewSale({...newSale, model:e.target.value})} />
-                      <input type="number" placeholder="စျေးနှုန်း" className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border dark:border-slate-700" value={newSale.price} onChange={e=>setNewSale({...newSale, price:e.target.value})} />
-                      <button onClick={() => {
-                        if(newSale.model && newSale.price) {
-                          setSales([{...newSale, id: Date.now().toString()}, ...sales]);
-                          setIsAddModalOpen(false);
-                          setNewSale({date: new Date().toISOString().split('T')[0], model: '', price: '', specs: ''});
-                        }
-                      }} className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg">သိမ်းဆည်းမည်</button>
-                      <button onClick={() => setIsAddModalOpen(false)} className="w-full text-slate-400 py-2">မလုပ်တော့ပါ</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Install Info Modal */}
-              {isInstallModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                  <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in">
-                    <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-lg font-bold">App သွင်းနည်း</h2>
-                      <button onClick={() => setIsInstallModalOpen(false)}><X size={24} /></button>
-                    </div>
-                    <div className="text-sm space-y-3 text-slate-600 dark:text-slate-400">
-                        <p><b>Android:</b> Browser ရဲ့ (⋮) ကိုနှိပ်ပြီး "Install App" ကို ရွေးပါ။</p>
-                        <p><b>iPhone:</b> Safari ရဲ့ (Share) ကိုနှိပ်ပြီး "Add to Home Screen" ကို ရွေးပါ။</p>
-                    </div>
-                    <button onClick={() => setIsInstallModalOpen(false)} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl mt-6">နားလည်ပါပြီ</button>
-                  </div>
-                </div>
-              )}
+    function modOverview(){
+      return `
+        <div class="card">
+          <div class="hd">
+            <div>
+              <div class="title">Overview</div>
+              <div class="sub">mPOS style dashboard • ${todayStr()}</div>
             </div>
-          );
-        };
+            <span class="chip">📌 Demo UI</span>
+          </div>
+          <div class="bd">
+            <div class="grid">
+              <div class="card kpiCard"><div class="bd">
+                <div class="sub">Today Sales</div>
+                <div class="kpi">${money(1850000)} <small>MMK</small></div>
+                <div class="tag"><span class="dot"></span> On track</div>
+              </div></div>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+              <div class="card kpiCard"><div class="bd">
+                <div class="sub">Repairs In Progress</div>
+                <div class="kpi">${12} <small>jobs</small></div>
+                <div class="tag"><span class="dot warn"></span> Need follow-up</div>
+              </div></div>
+
+              <div class="card kpiCard"><div class="bd">
+                <div class="sub">Installments Due</div>
+                <div class="kpi">${3} <small>customers</small></div>
+                <div class="tag"><span class="dot danger"></span> Urgent</div>
+              </div></div>
+
+              <div class="card" style="grid-column: span 12;">
+                <div class="hd">
+                  <div>
+                    <div class="title">Recent activity</div>
+                    <div class="sub">Mock records</div>
+                  </div>
+                  <span class="chip">🧾 Logs</span>
+                </div>
+                <div class="bd">
+                  <table>
+                    <thead><tr><th>Date</th><th>Type</th><th>Description</th><th class="right">Amount</th></tr></thead>
+                    <tbody>
+                      <tr><td>${todayStr()}</td><td>Sale</td><td>Accessories x2</td><td class="right">${money(25000)} MMK</td></tr>
+                      <tr><td>${todayStr()}</td><td>Repair</td><td>Screen replace (A12)</td><td class="right">${money(85000)} MMK</td></tr>
+                      <tr><td>${todayStr()}</td><td>Expense</td><td>Electricity</td><td class="right">${money(15000)} MMK</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function modFinance(){
+      return `
+        <div class="card">
+          <div class="hd">
+            <div>
+              <div class="title">Finance • Income / Expense</div>
+              <div class="sub">Google Sheet ချိတ်ထားတဲ့ module</div>
+            </div>
+            <span class="chip">💰 Sheet Sync</span>
+          </div>
+          <div class="bd">
+            <div class="card">
+              <div class="hd">
+                <div>
+                  <div class="title">New transaction</div>
+                  <div class="sub">Save → Google Sheet</div>
+                </div>
+                <span class="chip" id="finStatusChip">Ready</span>
+              </div>
+
+              <div class="bd">
+                <div class="two">
+                  <div>
+                    <div class="sub">Type</div>
+                    <select class="field" id="finType">
+                      <option>Income</option>
+                      <option>Expense</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div class="sub">Amount (MMK)</div>
+                    <input class="field" id="finAmount" placeholder="e.g. 50000" inputmode="numeric">
+                  </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                  <div class="sub">Note</div>
+                  <input class="field" id="finNote" placeholder="e.g. Accessories sale / Rent / Phone repair fee">
+                </div>
+
+                <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
+                  <button class="btn" id="finClearBtn">Clear</button>
+                  <button class="btn primary" id="finSaveBtn">Save to Sheet</button>
+                </div>
+
+                <div class="msg" id="finMsg"></div>
+                <div class="hint" style="margin-top:10px;">
+                  ✅ Sheet headers: Timestamp, Type, Amount, Note, User <br/>
+                  ⚠️ Apps Script Web App ကို "Anyone" access ထားတာမဟုတ်ရင် CORS/permission ဖြစ်နိုင်ပါတယ်။
+                </div>
+              </div>
+            </div>
+
+            <div style="height:12px;"></div>
+
+            <div class="card">
+              <div class="hd">
+                <div>
+                  <div class="title">Quick summary (mock)</div>
+                  <div class="sub">Sheet read-back မလုပ်သေး (UI only)</div>
+                </div>
+              </div>
+              <div class="bd">
+                <table>
+                  <thead><tr><th>Item</th><th class="right">MMK</th></tr></thead>
+                  <tbody>
+                    <tr><td>Income</td><td class="right">${money(2100000)}</td></tr>
+                    <tr><td>Expense</td><td class="right">${money(250000)}</td></tr>
+                    <tr><td><b>Net</b></td><td class="right"><b>${money(1850000)}</b></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `;
+    }
+
+    function modRepair(){
+      return `
+        <div class="card">
+          <div class="hd">
+            <div>
+              <div class="title">Repair</div>
+              <div class="sub">Intake → Status → Delivered (UI demo)</div>
+            </div>
+            <span class="chip">🛠️ Jobs</span>
+          </div>
+          <div class="bd">
+            <div class="card">
+              <div class="hd">
+                <div>
+                  <div class="title">New repair intake</div>
+                  <div class="sub">Demo form</div>
+                </div>
+              </div>
+              <div class="bd">
+                <div class="two">
+                  <div>
+                    <div class="sub">Customer</div>
+                    <input class="field" placeholder="e.g. Mg Aung">
+                  </div>
+                  <div>
+                    <div class="sub">Phone model</div>
+                    <input class="field" placeholder="e.g. Samsung A32">
+                  </div>
+                </div>
+                <div style="margin-top:12px;">
+                  <div class="sub">Issue</div>
+                  <input class="field" placeholder="e.g. No power / Screen crack">
+                </div>
+                <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+                  <button class="btn primary" onclick="alert('Demo UI only (backend/database ချိတ်မှ save လုပ်နိုင်)')">Create job</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="height:12px;"></div>
+
+            <div class="card">
+              <div class="hd">
+                <div>
+                  <div class="title">Job list</div>
+                  <div class="sub">Mock</div>
+                </div>
+              </div>
+              <div class="bd">
+                <table>
+                  <thead><tr><th>Job</th><th>Customer</th><th>Model</th><th>Status</th><th class="right">Fee</th></tr></thead>
+                  <tbody>
+                    <tr><td>#R-1021</td><td>Su Su</td><td>iPhone 11</td><td><span class="tag"><span class="dot warn"></span> Waiting parts</span></td><td class="right">${money(120000)} MMK</td></tr>
+                    <tr><td>#R-1022</td><td>Ko Min</td><td>OPPO A54</td><td><span class="tag"><span class="dot"></span> In progress</span></td><td class="right">${money(65000)} MMK</td></tr>
+                    <tr><td>#R-1023</td><td>Hnin</td><td>Vivo Y20</td><td><span class="tag"><span class="dot danger"></span> Need call</span></td><td class="right">${money(45000)} MMK</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `;
+    }
+
+    function modMobileSales(){
+      return `
+        <div class="card">
+          <div class="hd">
+            <div>
+              <div class="title">Mobile Sales POS</div>
+              <div class="sub">Quick sale UI demo</div>
+            </div>
+            <span class="chip">📱 POS</span>
+          </div>
+          <div class="bd">
+            <div class="card">
+              <div class="hd">
+                <div>
+                  <div class="title">Quick invoice</div>
+                  <div class="sub">Demo</div>
+                </div>
+              </div>
+              <div class="bd">
+                <div class="two">
+                  <div>
+                    <div class="sub">Phone model</div>
+                    <input class="field" placeholder="e.g. iPhone 13 Pro Max">
+                  </div>
+                  <div>
+                    <div class="sub">Price (MMK)</div>
+                    <input class="field" placeholder="e.g. 2500000" inputmode="numeric">
+                  </div>
+                </div>
+                <div style="margin-top:12px;">
+                  <div class="sub">Customer name</div>
+                  <input class="field" placeholder="e.g. Ma Thet">
+                </div>
+                <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
+                  <button class="btn" onclick="window.print()">🖨️ Print (basic)</button>
+                  <button class="btn primary" onclick="alert('Demo UI only (backend/database ချိတ်မှ invoice save)')">Checkout</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="height:12px;"></div>
+
+            <div class="card">
+              <div class="hd"><div><div class="title">Recent invoices</div><div class="sub">Mock</div></div></div>
+              <div class="bd">
+                <table>
+                  <thead><tr><th>Invoice</th><th>Customer</th><th>Model</th><th class="right">Total</th></tr></thead>
+                  <tbody>
+                    <tr><td>INV-3001</td><td>Ko Aye</td><td>Samsung S21</td><td class="right">${money(1900000)} MMK</td></tr>
+                    <tr><td>INV-3002</td><td>Ma Nwe</td><td>iPhone 12</td><td class="right">${money(2100000)} MMK</td></tr>
+                    <tr><td>INV-3003</td><td>Su</td><td>OPPO Reno</td><td class="right">${money(1350000)} MMK</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Accessories cart (client side)
+    let accCart = [];
+    function modAccessories(){
+      return `
+        <div class="card">
+          <div class="hd">
+            <div>
+              <div class="title">Accessories Sales</div>
+              <div class="sub">Cart UI demo</div>
+            </div>
+            <span class="chip">🎧 Cart</span>
+          </div>
+          <div class="bd">
+            <div class="card">
+              <div class="hd">
+                <div>
+                  <div class="title">Add to cart</div>
+                  <div class="sub">Client-side only</div>
+                </div>
+                <span class="chip" id="accTotalChip">Total: 0 MMK</span>
+              </div>
+              <div class="bd">
+                <div class="two">
+                  <div>
+                    <div class="sub">Item</div>
+                    <input class="field" id="accItem" placeholder="e.g. Type-C Cable">
+                  </div>
+                  <div>
+                    <div class="sub">Price (MMK)</div>
+                    <input class="field" id="accPrice" placeholder="e.g. 8000" inputmode="numeric">
+                  </div>
+                </div>
+                <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
+                  <button class="btn" id="accAddBtn">Add</button>
+                  <button class="btn primary" id="accCheckoutBtn">Checkout</button>
+                </div>
+
+                <div style="height:12px;"></div>
+                <div class="card">
+                  <div class="hd"><div><div class="title">Cart</div><div class="sub">Local list</div></div></div>
+                  <div class="bd" id="accCartBox"></div>
+                </div>
+
+                <div class="hint" style="margin-top:10px;">
+                  Receipt print + stock update ကို backend ချိတ်လိုက်ရင် mPOS လိုအပြည့်ဖြစ်လာမယ်။
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindAccessories(){
+      const cartBox = $("#accCartBox");
+      const totalChip = $("#accTotalChip");
+
+      function render(){
+        const total = accCart.reduce((s,x)=>s+x.price,0);
+        totalChip.textContent = `Total: ${money(total)} MMK`;
+
+        if(accCart.length===0){
+          cartBox.innerHTML = `<div class="hint">Cart empty. Add items.</div>`;
+          return;
+        }
+        cartBox.innerHTML = `
+          <table>
+            <thead><tr><th>Item</th><th class="right">Price</th><th class="right">Action</th></tr></thead>
+            <tbody>
+              ${accCart.map((it,i)=>`
+                <tr>
+                  <td>${esc(it.name)}</td>
+                  <td class="right">${money(it.price)} MMK</td>
+                  <td class="right"><button class="btn" data-rm="${i}">Remove</button></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        `;
+        cartBox.querySelectorAll("[data-rm]").forEach(b=>{
+          b.addEventListener("click", ()=>{
+            accCart.splice(Number(b.dataset.rm), 1);
+            render();
+          });
+        });
+      }
+
+      $("#accAddBtn").onclick = ()=>{
+        const name = ($("#accItem").value||"").trim();
+        const price = Number(($("#accPrice").value||"").trim());
+        if(!name || !Number.isFinite(price) || price<=0){
+          alert("Valid item & price ထည့်ပါ");
+          return;
+        }
+        accCart.push({name, price});
+        $("#accItem").value = "";
+        $("#accPrice").value = "";
+        render();
+      };
+
+      $("#accCheckoutBtn").onclick = ()=>{
+        const total = accCart.reduce((s,x)=>s+x.price,0);
+        if(total<=0){ alert("Cart empty"); return; }
+        alert(`Checkout (demo)\nTotal: ${money(total)} MMK`);
+        accCart = [];
+        render();
+      };
+
+      render();
+    }
+
+    function modInstallment(){
+      return `
+        <div class="card">
+          <div class="hd">
+            <div>
+              <div class="title">Installment</div>
+              <div class="sub">Due list UI demo</div>
+            </div>
+            <span class="chip">🧾 Due</span>
+          </div>
+          <div class="bd">
+            <div class="card">
+              <div class="hd"><div><div class="title">Due list</div><div class="sub">Mock</div></div></div>
+              <div class="bd">
+                <table>
+                  <thead><tr><th>Customer</th><th>Contract</th><th>Due date</th><th class="right">Due</th></tr></thead>
+                  <tbody>
+                    <tr><td>Ko Zaw</td><td>INS-9901</td><td>2026-02-03</td><td class="right">${money(120000)} MMK</td></tr>
+                    <tr><td>Hla Hla</td><td>INS-9902</td><td>2026-02-06</td><td class="right">${money(90000)} MMK</td></tr>
+                    <tr><td>Mg Tun</td><td>INS-9903</td><td>2026-02-10</td><td class="right">${money(150000)} MMK</td></tr>
+                  </tbody>
+                </table>
+                <div class="hint" style="margin-top:10px;">
+                  Reminder SMS/Call feature ထည့်ချင်ရင် backend + messaging integration လိုပါမယ်။
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderModule(module){
+      const root = $("#moduleRoot");
+      state.module = module;
+      setActiveNav(module);
+
+      if(module === "overview"){
+        root.innerHTML = modOverview();
+        setRouteSub("Overview");
+      } else if(module === "finance"){
+        root.innerHTML = modFinance();
+        setRouteSub("Finance");
+        bindFinance();
+      } else if(module === "repair"){
+        root.innerHTML = modRepair();
+        setRouteSub("Repair");
+      } else if(module === "mobile_sales"){
+        root.innerHTML = modMobileSales();
+        setRouteSub("Mobile Sales");
+      } else if(module === "accessories"){
+        root.innerHTML = modAccessories();
+        setRouteSub("Accessories");
+        bindAccessories();
+      } else if(module === "installment"){
+        root.innerHTML = modInstallment();
+        setRouteSub("Installment");
+      } else {
+        root.innerHTML = `<div class="card"><div class="bd">Unknown module</div></div>`;
+        setRouteSub("Unknown");
+      }
+    }
+
+    /* ===================== Finance bind (Sheet) ===================== */
+    function bindFinance(){
+      const btnSave = $("#finSaveBtn");
+      const btnClear = $("#finClearBtn");
+      const msg = $("#finMsg");
+      const chip = $("#finStatusChip");
+
+      btnClear.onclick = ()=>{
+        $("#finAmount").value = "";
+        $("#finNote").value = "";
+        msg.textContent = "";
+        msg.className = "msg";
+        chip.textContent = "Ready";
+      };
+
+      btnSave.onclick = async (e)=>{
+        e.preventDefault();
+        msg.textContent = "";
+        msg.className = "msg";
+
+        const type = $("#finType").value;
+        const amount = Number(($("#finAmount").value||"").trim());
+        const note = ($("#finNote").value||"").trim();
+        const user = state.user ? state.user.username : "guest";
+
+        if(!Number.isFinite(amount) || amount <= 0){
+          msg.textContent = "❌ Amount မှန်မှန်ထည့်ပါ";
+          msg.classList.add("err");
+          return;
+        }
+
+        btnSave.disabled = true;
+        btnSave.textContent = "Saving...";
+        chip.textContent = "Saving...";
+
+        try{
+          await saveTransactionToSheet({ type, amount, note, user });
+          msg.textContent = "✅ Google Sheet ထဲသိမ်းပြီးပါပြီ";
+          msg.classList.add("ok");
+          chip.textContent = "Saved";
+          $("#finAmount").value = "";
+          $("#finNote").value = "";
+        }catch(err){
+          msg.textContent = "❌ " + err.message;
+          msg.classList.add("err");
+          chip.textContent = "Error";
+        }finally{
+          btnSave.disabled = false;
+          btnSave.textContent = "Save to Sheet";
+        }
+      };
+    }
+
+    /* ===================== Login modal ===================== */
+    function openLogin(text){
+      $("#loginBackdrop").classList.add("show");
+      $("#loginSub").textContent = text || "Login required";
+      $("#loginErr").style.display = "none";
+      setTimeout(()=>$("#inpUser").focus(), 60);
+    }
+    function closeLogin(){ $("#loginBackdrop").classList.remove("show"); }
+
+    $("#btnLogin").addEventListener("click", ()=>openLogin("Please login to continue"));
+    $("#btnLogout").addEventListener("click", ()=>{
+      state.user = null;
+      clearSession();
+      setSessionUI();
+      renderModule("overview");
+    });
+    $("#btnCloseLogin").addEventListener("click", closeLogin);
+    $("#loginBackdrop").addEventListener("click", (e)=>{ if(e.target === $("#loginBackdrop")) closeLogin(); });
+
+    $("#btnDemoFill").addEventListener("click", ()=>{
+      $("#inpUser").value = DEMO_USER.username;
+      $("#inpPass").value = DEMO_USER.password;
+    });
+
+    $("#btnDoLogin").addEventListener("click", ()=>{
+      const u = ($("#inpUser").value||"").trim();
+      const p = ($("#inpPass").value||"").trim();
+      const ok = (u===DEMO_USER.username && p===DEMO_USER.password);
+      if(!ok){
+        const err = $("#loginErr");
+        err.style.display = "";
+        err.textContent = "Wrong username or password.";
+        return;
+      }
+      state.user = { username: DEMO_USER.username, role: DEMO_USER.role };
+      saveSession(state.user);
+      setSessionUI();
+      closeLogin();
+    });
+
+    ["#inpUser","#inpPass"].forEach(id=>{
+      $(id).addEventListener("keydown", (e)=>{ if(e.key==="Enter") $("#btnDoLogin").click(); });
+    });
+
+    /* ===================== Sidebar navigation ===================== */
+    $$(".navItem").forEach(n=>{
+      n.addEventListener("click", ()=>{
+        // Finance ကို login မလုပ်ဘဲဝင်ချင်ရင် login ပြ
+        if(n.dataset.module === "finance" && !state.user){
+          openLogin("Finance အတွက် login လိုပါတယ်");
+          return;
+        }
+        renderModule(n.dataset.module);
+      });
+    });
+
+    // Mobile menu toggle
+    $("#btnToggleNav").addEventListener("click", ()=>{
+      state.navOpen = !state.navOpen;
+      $("#sidebar").style.display = state.navOpen ? "" : "none";
+    });
+
+    /* ===================== Boot ===================== */
+    (function init(){
+      state.user = loadSession();
+      setSessionUI();
+      renderModule("overview");
+    })();
+  </script>
 </body>
 </html>
