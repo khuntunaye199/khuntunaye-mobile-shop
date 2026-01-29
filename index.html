@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Phone Sales Tracker</title>
-    <link rel="manifest" href="manifest.json">
+    
+    <link rel="manifest" href='data:application/manifest+json,{"name":"Phone Sales Tracker","short_name":"PhoneSales","description":"Phone Sales Inventory Management App","start_url":".","display":"standalone","background_color":"#020617","theme_color":"#059669","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/1043/1043444.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
+    
     <meta name="theme-color" content="#059669">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1043/1043444.png">
     
@@ -12,21 +14,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        body { 
-          font-family: 'Padauk', 'Roboto', sans-serif; 
-          -webkit-tap-highlight-color: transparent; 
-          overflow-x: hidden; 
-          user-select: none;
-        }
+        body { font-family: 'Padauk', 'Roboto', sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; user-select: none; }
         .dark body { background-color: #020617; }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
-        
-        /* Animation Classes */
         .animate-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 
     <script type="importmap">
@@ -43,58 +35,47 @@
 <body>
     <div id="root"></div>
 
+    <script>
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'phone-sales-v1';
+                self.addEventListener('install', e => {
+                    e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./'])));
+                });
+                self.addEventListener('fetch', e => {
+                    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+                });
+            `;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Error:', err));
+        }
+    </script>
+
     <script type="module">
         import React, { useState, useEffect, useMemo } from 'react';
         import ReactDOM from 'react-dom/client';
-        import { 
-          Plus, Search, Trash2, Smartphone, Settings, Download, X, 
-          BarChart3, Sun, Moon, Monitor, Calendar, Info, ArrowDownToLine 
-        } from 'lucide-react';
-        import { 
-          BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell 
-        } from 'recharts';
+        import { Plus, Search, Trash2, Smartphone, Settings, Download, X, BarChart3, Sun, Moon, Monitor, Calendar, Info, ArrowDownToLine } from 'lucide-react';
+        import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
-        // --- CONSTANTS ---
         const INITIAL_DATA = [
           { id: '1', date: '2026-01-01', model: 'Redmi 14c', price: 400000, specs: '8/128' },
-          { id: '2', date: '2026-01-01', model: 'Redmi 15c', price: 500000, specs: '8/256' },
-          { id: '3', date: '2026-01-02', model: 'iPhone 15 Pro', price: 3500000, specs: '256GB' },
+          { id: '2', date: '2026-01-02', model: 'iPhone 15 Pro', price: 3500000, specs: '256GB' }
         ];
-        const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
-        // --- SUB-COMPONENTS ---
-        const StatsCard = ({ title, value, icon, colorClass }) => (
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center space-x-4 transition-colors">
-            <div className={`p-3 rounded-xl ${colorClass}`}>{icon}</div>
-            <div>
-              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">{title}</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 leading-tight">{value}</h3>
-            </div>
-          </div>
-        );
-
-        // --- MAIN APP ---
         const App = () => {
-          const [sales, setSales] = useState(() => {
-            const saved = localStorage.getItem('phone_sales_data');
-            return saved ? JSON.parse(saved) : INITIAL_DATA;
-          });
-
+          const [sales, setSales] = useState(() => JSON.parse(localStorage.getItem('phone_sales_data')) || INITIAL_DATA);
           const [theme, setTheme] = useState(localStorage.getItem('app_theme') || 'system');
           const [searchTerm, setSearchTerm] = useState('');
           const [isAddModalOpen, setIsAddModalOpen] = useState(false);
           const [isSettingsOpen, setIsSettingsOpen] = useState(false);
           const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
-          const [newSale, setNewSale] = useState({
-            date: new Date().toISOString().split('T')[0],
-            model: '', price: 0, specs: ''
-          });
+          const [newSale, setNewSale] = useState({ date: new Date().toISOString().split('T')[0], model: '', price: '', specs: '' });
 
           useEffect(() => {
             const root = window.document.documentElement;
             const applyTheme = (t) => {
-              let actualTheme = t;
-              if (t === 'system') actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+              let actualTheme = t === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
               actualTheme === 'dark' ? root.classList.add('dark') : root.classList.remove('dark');
             };
             applyTheme(theme);
@@ -103,102 +84,63 @@
 
           useEffect(() => { localStorage.setItem('phone_sales_data', JSON.stringify(sales)); }, [sales]);
 
-          const stats = useMemo(() => {
-            const today = new Date().toISOString().split('T')[0];
-            const dailyTotal = sales.filter(s => s.date === today).reduce((sum, s) => sum + s.price, 0);
-            const totalRevenue = sales.reduce((sum, s) => sum + s.price, 0);
-            return { totalRevenue, totalUnits: sales.length, dailyTotal };
-          }, [sales]);
+          const stats = useMemo(() => ({
+            totalRevenue: sales.reduce((sum, s) => sum + Number(s.price), 0),
+            totalUnits: sales.length,
+            dailyTotal: sales.filter(s => s.date === new Date().toISOString().split('T')[0]).reduce((sum, s) => sum + Number(s.price), 0)
+          }), [sales]);
 
-          const filteredSales = sales
-            .filter(s => s.model.toLowerCase().includes(searchTerm.toLowerCase()) || s.date.includes(searchTerm))
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-          const chartData = useMemo(() => {
-            const grouped = sales.reduce((acc, sale) => {
-              acc[sale.date] = (acc[sale.date] || 0) + sale.price;
-              return acc;
-            }, {});
-            return Object.entries(grouped)
-              .map(([date, amount]) => ({ date, amount }))
-              .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-              .slice(-7);
-          }, [sales]);
-
-          const formatCurrency = (num) => new Intl.NumberFormat('en-US').format(num) + ' Ks';
-
-          const exportToCSV = () => {
-            const headers = ['Date', 'Model', 'Specs', 'Price (Ks)'];
-            const rows = sales.map(s => [s.date, s.model, s.specs, s.price]);
-            const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
-            window.open(encodeURI(csvContent));
-          };
+          const filteredSales = sales.filter(s => s.model.toLowerCase().includes(searchTerm.toLowerCase()));
 
           return (
-            <div className="min-h-screen pb-24 bg-slate-50 dark:bg-slate-950 transition-colors">
+            <div className="min-h-screen pb-24 bg-slate-50 dark:bg-slate-950 transition-colors text-slate-900 dark:text-slate-100">
               <header className="bg-emerald-600 dark:bg-emerald-700 text-white p-6 rounded-b-[2.5rem] shadow-xl sticky top-0 z-20">
                 <div className="max-w-4xl mx-auto flex justify-between items-start">
                   <div>
-                    <h1 className="text-xl font-bold tracking-tight">ဖုန်းအရောင်းစာရင်း</h1>
-                    <p className="text-xs opacity-75 font-medium">စုစုပေါင်း: {formatCurrency(stats.totalRevenue)}</p>
+                    <h1 className="text-xl font-bold">ဖုန်းအရောင်းစာရင်း</h1>
+                    <p className="text-xs opacity-75">စုစုပေါင်း: {new Intl.NumberFormat().format(stats.totalRevenue)} Ks</p>
                   </div>
                   <div className="flex space-x-2">
-                    <button onClick={() => setIsInstallModalOpen(true)} className="bg-white/20 p-2 rounded-xl flex items-center space-x-1"><ArrowDownToLine size={18} /><span className="text-[10px] font-bold">Install</span></button>
+                    <button onClick={() => setIsInstallModalOpen(true)} className="bg-white/20 p-2 rounded-xl"><ArrowDownToLine size={20} /></button>
                     <button onClick={() => setIsSettingsOpen(true)} className="bg-white/20 p-2 rounded-xl"><Settings size={20} /></button>
                   </div>
                 </div>
-                <div className="max-w-4xl mx-auto mt-6 flex space-x-3">
-                  <button onClick={() => setIsAddModalOpen(true)} className="flex-1 bg-white dark:bg-slate-100 text-emerald-700 font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center space-x-2">
+                <div className="max-w-4xl mx-auto mt-6">
+                  <button onClick={() => setIsAddModalOpen(true)} className="w-full bg-white dark:bg-slate-100 text-emerald-700 font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center space-x-2">
                     <Plus size={20} /><span>စာရင်းအသစ်ထည့်မည်</span>
                   </button>
-                  <button onClick={exportToCSV} className="bg-emerald-500/40 p-4 rounded-2xl border border-white/20"><Download size={20} /></button>
                 </div>
               </header>
 
-              <main className="max-w-4xl mx-auto p-4 space-y-6 mt-2 relative z-10">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <StatsCard title="ယနေ့ရောင်းအား" value={formatCurrency(stats.dailyTotal)} icon={<Calendar className="text-emerald-600" size={20} />} colorClass="bg-emerald-100 dark:bg-emerald-900/30" />
-                  <StatsCard title="စုစုပေါင်းအရေအတွက်" value={`${stats.totalUnits} လုံး`} icon={<Smartphone className="text-blue-600" size={20} />} colorClass="bg-blue-100 dark:bg-blue-900/30" />
-                </div>
-
-                {chartData.length > 0 && (
-                  <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800">
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-2 mb-4"><BarChart3 size={20} className="text-emerald-600" /><span>ရက်သတ္တပတ် ရောင်းအား</span></h3>
-                    <div className="h-40 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData}>
-                          <XAxis dataKey="date" hide />
-                          <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', backgroundColor: theme === 'dark' ? '#1e293b' : '#fff' }} />
-                          <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
-                            {chartData.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
+              <main className="max-w-4xl mx-auto p-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border dark:border-slate-800">
+                    <p className="text-xs text-slate-500 uppercase">ယနေ့အရောင်း</p>
+                    <h3 className="text-lg font-bold text-emerald-600">{new Intl.NumberFormat().format(stats.dailyTotal)}</h3>
                   </div>
-                )}
+                  <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border dark:border-slate-800">
+                    <p className="text-xs text-slate-500 uppercase">စုစုပေါင်း</p>
+                    <h3 className="text-lg font-bold text-blue-600">{stats.totalUnits} လုံး</h3>
+                  </div>
+                </div>
 
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input 
-                    type="text" placeholder="ရှာဖွေရန်..." 
-                    className="w-full bg-white dark:bg-slate-900 p-4 pl-12 rounded-2xl border border-slate-100 dark:border-slate-800 outline-none dark:text-white"
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+                  <input type="text" placeholder="ရှာဖွေရန်..." className="w-full bg-white dark:bg-slate-900 p-4 pl-12 rounded-2xl border dark:border-slate-800 outline-none" onChange={(e)=>setSearchTerm(e.target.value)} />
                 </div>
 
                 <div className="space-y-3">
-                  {filteredSales.map((sale) => (
-                    <div key={sale.id} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex justify-between items-center animate-in">
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-slate-50 dark:bg-slate-800 p-3.5 rounded-2xl text-emerald-600"><Smartphone size={24} /></div>
+                  {filteredSales.map(sale => (
+                    <div key={sale.id} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border dark:border-slate-800 flex justify-between items-center animate-in">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-emerald-600"><Smartphone size={20} /></div>
                         <div>
-                          <h4 className="font-bold dark:text-white leading-tight">{sale.model}</h4>
-                          <p className="text-[10px] text-slate-400 font-medium">{sale.date} • {sale.specs}</p>
+                          <h4 className="font-bold">{sale.model}</h4>
+                          <p className="text-[10px] text-slate-400">{sale.date} • {sale.specs}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-3">
-                        <p className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(sale.price)}</p>
+                        <span className="font-bold text-emerald-600">{new Intl.NumberFormat().format(sale.price)}</span>
                         <button onClick={() => setSales(sales.filter(s => s.id !== sale.id))} className="text-slate-300 hover:text-red-500"><Trash2 size={18} /></button>
                       </div>
                     </div>
@@ -206,20 +148,40 @@
                 </div>
               </main>
 
-              {/* Add Modal Example */}
+              {/* Add Modal */}
               {isAddModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center">
-                  <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-t-[2.5rem] sm:rounded-3xl p-8 animate-in">
-                    <h2 className="text-xl font-bold dark:text-white mb-6">စာရင်းအသစ်</h2>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center">
+                  <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-t-[2rem] sm:rounded-3xl p-8 animate-in">
+                    <h2 className="text-xl font-bold mb-6">စာရင်းအသစ်</h2>
                     <div className="space-y-4">
-                      <input type="text" placeholder="Model" className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 dark:text-white" onChange={(e) => setNewSale({...newSale, model: e.target.value})} />
-                      <input type="number" placeholder="Price" className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 dark:text-white" onChange={(e) => setNewSale({...newSale, price: Number(e.target.value)})} />
+                      <input type="text" placeholder="ဖုန်းမော်ဒယ်" className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border dark:border-slate-700" value={newSale.model} onChange={e=>setNewSale({...newSale, model:e.target.value})} />
+                      <input type="number" placeholder="စျေးနှုန်း" className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border dark:border-slate-700" value={newSale.price} onChange={e=>setNewSale({...newSale, price:e.target.value})} />
                       <button onClick={() => {
-                        if(newSale.model) setSales([{...newSale, id: Date.now().toString()}, ...sales]);
-                        setIsAddModalOpen(false);
-                      }} className="w-full bg-emerald-600 text-white font-bold py-5 rounded-2xl shadow-xl">သိမ်းမည်</button>
-                      <button onClick={() => setIsAddModalOpen(false)} className="w-full text-slate-400 py-2">ပိတ်ရန်</button>
+                        if(newSale.model && newSale.price) {
+                          setSales([{...newSale, id: Date.now().toString()}, ...sales]);
+                          setIsAddModalOpen(false);
+                          setNewSale({date: new Date().toISOString().split('T')[0], model: '', price: '', specs: ''});
+                        }
+                      }} className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg">သိမ်းဆည်းမည်</button>
+                      <button onClick={() => setIsAddModalOpen(false)} className="w-full text-slate-400 py-2">မလုပ်တော့ပါ</button>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Install Info Modal */}
+              {isInstallModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                  <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-lg font-bold">App သွင်းနည်း</h2>
+                      <button onClick={() => setIsInstallModalOpen(false)}><X size={24} /></button>
+                    </div>
+                    <div className="text-sm space-y-3 text-slate-600 dark:text-slate-400">
+                        <p><b>Android:</b> Browser ရဲ့ (⋮) ကိုနှိပ်ပြီး "Install App" ကို ရွေးပါ။</p>
+                        <p><b>iPhone:</b> Safari ရဲ့ (Share) ကိုနှိပ်ပြီး "Add to Home Screen" ကို ရွေးပါ။</p>
+                    </div>
+                    <button onClick={() => setIsInstallModalOpen(false)} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl mt-6">နားလည်ပါပြီ</button>
                   </div>
                 </div>
               )}
